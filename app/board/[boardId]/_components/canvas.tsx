@@ -13,8 +13,10 @@ import {
 import Info from "./info"
 import Participants from "./participants"
 import Toolbar from "./toolbar"
-import { useState } from "react";
-import { CanvasMode, CanvasState } from "@/types/canvas";
+import React, { useCallback, useState } from "react";
+import { Camera, CanvasMode, CanvasState } from "@/types/canvas";
+import CursorsPresence from "./cursors-presence";
+import { pointerEventToCanvasPoint } from "@/lib/utils";
 
 interface CanvasProps {
     boardId: string;
@@ -30,9 +32,34 @@ const Canvas = ({
         mode: CanvasMode.None
     });
 
+    const [camera, setCamera] = useState<Camera>({ x: 0, y: 0 });
+
     const history = useHistory();
     const canUndo = useCanUndo();
     const canRedo = useCanRedo();
+
+    const onPointMouse = useMutation(({ setMyPresence }, e: React.PointerEvent) => {
+        e.preventDefault();
+        const current = pointerEventToCanvasPoint(e, camera);       
+        setMyPresence({
+            cursor: current
+        })
+    }, []);
+    const onPointerLeave = useMutation(({ setMyPresence }, e: React.PointerEvent) => {
+        e.preventDefault();
+         
+        setMyPresence({
+            cursor: null
+        })
+    }, []);
+   
+
+    const onWheel = useCallback((e: React.WheelEvent) => {
+        setCamera((camera) => ({
+            x: camera.x - e.deltaX,
+            y: camera.y - e.deltaY
+        }))
+    }, [])
 
 
 
@@ -47,10 +74,19 @@ const Canvas = ({
                 canUndo={canUndo}
                 undo={history.undo}
                 redo={history.redo}
-
             />
+            <svg
+                className="h-[100vh] w-[100vw] bg-slate-700"
+                onWheel={onWheel}
+                onPointerMove={onPointMouse}
+                onPointerLeave={onPointerLeave}
+            >
+                <g>
+                    <CursorsPresence />
+                </g>
+            </svg>
         </main>
     )
 }
 
-export default Canvas
+export default Canvas;

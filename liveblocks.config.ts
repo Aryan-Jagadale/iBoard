@@ -5,7 +5,6 @@ const client = createClient({
   // publicApiKey: "pk_dev_jEioYMKmz7Yyo-GanQok1sl9kMRdJ6P9597IbD5ptKpjezb8st1YodXrqhV7PKOL",
   throttle: 16,
   authEndpoint: "/api/liveblocks-auth",
-  // authEndpoint: "/api/liveblocks-auth",
   // throttle: 100,
   async resolveUsers({ userIds }) {
     // Used only for Comments and Notifications. Return a list of user information
@@ -53,7 +52,7 @@ const client = createClient({
 // and that will automatically be kept in sync. Accessible through the
 // `user.presence` property. Must be JSON-serializable.
 type Presence = {
-  // cursor: { x: number, y: number } | null,
+  cursor: { x: number, y: number } | null,
   // ...
 };
 
