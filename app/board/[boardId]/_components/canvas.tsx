@@ -34,6 +34,7 @@ import { Path } from "./path";
 import { useDisableScrollBounce } from "@/hooks/use-disable-scroll-bounce";
 import { useDeleteLayers } from "@/hooks/use-delete-layers";
 
+
 const MAX_LAYERS = 100;
 
 interface CanvasProps {
@@ -431,6 +432,7 @@ const Canvas = ({ boardId }: CanvasProps) => {
     return (
         <main className="h-full w-full relative bg-neutral-100 touch-none">
             <Info boardId={boardId} />
+            
             <Participants />
             <Toolbar
                 canvasState={canvasState}
