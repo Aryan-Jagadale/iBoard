@@ -166,13 +166,25 @@ const Canvas = ({ boardId }: CanvasProps) => {
         initialBounds: XYWH
     ) => {
         history.pause()
-        setcanvasState({
-            mode: CanvasMode.Resizing,
-            initialBounds,
-            corner
+        if (LayerType.Note) {
+            setcanvasState({
+                mode: CanvasMode.Resizing,
+                initialBounds: {
+                    ...initialBounds,
+                    width: 400,
+                    height: 256,
+                },
+                corner
+            })
+        } else {
+            setcanvasState({
+                mode: CanvasMode.Resizing,
+                initialBounds,
+                corner
+            })
         }
 
-        )
+
     }, [history]);
 
     const startDrawing = useMutation((
@@ -397,42 +409,42 @@ const Canvas = ({ boardId }: CanvasProps) => {
             camera,
             history,
             canvasState.mode,
-    ]);
+        ]);
 
     const deleteLayers = useDeleteLayers();
 
 
     useEffect(() => {
         function onKeyDown(e: KeyboardEvent) {
-          switch (e.key) {
-            // case "Backspace":
-            //   deleteLayers();
-            //   break;
-            case "z": {
-              if (e.ctrlKey || e.metaKey) {
-                if (e.shiftKey) {
-                  history.redo();
-                } else {
-                  history.undo();
+            switch (e.key) {
+                case "Delete":
+                    deleteLayers();
+                    break;
+                case "z": {
+                    if (e.ctrlKey || e.metaKey) {
+                        if (e.shiftKey) {
+                            history.redo();
+                        } else {
+                            history.undo();
+                        }
+                        break;
+                    }
                 }
-                break;
-              }
             }
-          }
         }
-    
+
         document.addEventListener("keydown", onKeyDown);
-    
+
         return () => {
-          document.removeEventListener("keydown", onKeyDown)
+            document.removeEventListener("keydown", onKeyDown)
         }
-      }, [deleteLayers, history]);
-    
+    }, [deleteLayers, history]);
+
 
     return (
         <main className="h-full w-full relative bg-neutral-100 touch-none">
             <Info boardId={boardId} />
-            
+
             <Participants />
             <Toolbar
                 canvasState={canvasState}

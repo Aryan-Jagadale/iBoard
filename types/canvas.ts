@@ -66,6 +66,7 @@ export type NoteLayer = {
   width: number;
   fill: Color;
   value?: string;
+  content?:string;
 };
 
 export type Point = {
