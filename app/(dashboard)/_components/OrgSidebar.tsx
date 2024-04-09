@@ -28,7 +28,7 @@ const OrgSidebar = () => {
                         width={30}
                     />
                     <span >
-                        iMicro
+                        iBoard
                     </span>
                 </div>
             </Link>

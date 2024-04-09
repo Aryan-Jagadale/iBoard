@@ -83,8 +83,8 @@ const Canvas = ({ boardId }: CanvasProps) => {
                 type: layerType,
                 x: position.x,
                 y: position.y,
-                height: 100,
-                width: 100,
+                height: layerType === 4 ?  256 : 100,
+                width: layerType === 4 ?  400 : 100,
                 fill: lastUsedColor,
             });
             liveLayerIds.push(layerId);
@@ -166,23 +166,13 @@ const Canvas = ({ boardId }: CanvasProps) => {
         initialBounds: XYWH
     ) => {
         history.pause()
-        if (LayerType.Note) {
-            setcanvasState({
-                mode: CanvasMode.Resizing,
-                initialBounds: {
-                    ...initialBounds,
-                    width: 400,
-                    height: 256,
-                },
-                corner
-            })
-        } else {
-            setcanvasState({
-                mode: CanvasMode.Resizing,
-                initialBounds,
-                corner
-            })
-        }
+
+        setcanvasState({
+            mode: CanvasMode.Resizing,
+            initialBounds,
+            corner
+        })
+
 
 
     }, [history]);
@@ -459,7 +449,7 @@ const Canvas = ({ boardId }: CanvasProps) => {
                 setLastUsedColor={setLastUsedColor}
             />
             <svg
-                className="h-[100vh] w-[100vw] bg-slate-100"
+                className="h-[100vh] w-[100vw] overflow-auto bg-slate-100"
                 onWheel={onWheel}
                 onPointerMove={onPointMouse}
                 onPointerLeave={onPointerLeave}

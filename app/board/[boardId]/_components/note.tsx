@@ -55,8 +55,8 @@ export const Note = ({
     <foreignObject
       x={x}
       y={y}
-      width={width >= 400 ? width : 400}
-      height={height >= 256 ? height : 256}
+      width={width}
+      height={256}
       onPointerDown={(e) => onPointerDown(e, id)}
       style={{
         outline: selectionColor ? `1px solid ${selectionColor}` : "none",
