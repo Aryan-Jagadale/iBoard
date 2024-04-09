@@ -15,7 +15,7 @@ export const useApiMutation = (mutationfunc: any) => {
         throw error;
       }
     } finally {
-      return setPending(true);
+      return setPending(false);
     }
     
   };
