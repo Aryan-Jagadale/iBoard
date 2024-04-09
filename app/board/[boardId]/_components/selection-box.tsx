@@ -32,7 +32,6 @@ export const SelectionBox = memo(
       return null;
     }
 
-    console.log("SelectionBox rendered");
 
     return (
       <>
