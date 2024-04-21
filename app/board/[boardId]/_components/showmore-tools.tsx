@@ -2,7 +2,7 @@
 
 import { Hint } from '@/components/hint'
 import { Button } from '@/components/ui/button'
-import { PencilRuler, ChevronRight, FilePenLine } from 'lucide-react';
+import { PencilRuler, ChevronRight, FilePenLine, Presentation } from 'lucide-react';
 import { useState } from 'react';
 import Drawer from 'react-modern-drawer'
 import 'react-modern-drawer/dist/index.css'
@@ -10,7 +10,8 @@ import Lottie from "react-lottie-player";
 import groovyWalkAnimation from "@/public/workinprogress.json";
 
 
-const ShowmoreTools = () => {
+const ShowmoreTools = (props:any) => {
+    const {handleFullScreen} = props;
     const [openMenu, setopenMenu] = useState(false);
     const [isOpen, setIsOpen] = useState(false)
     const toggleDrawer = () => {
@@ -23,7 +24,6 @@ const ShowmoreTools = () => {
 
     const handleClose = () => {
         setopenMenu(false)
-
     }
     return (
         <>
@@ -35,6 +35,12 @@ const ShowmoreTools = () => {
                                 <Button onClick={handleClose} variant="board"
                                     size="icon">
                                     <ChevronRight />
+                                </Button>
+                            </Hint>
+                            <Hint label='Go to Presentation Mode'>
+                                <Button onClick={handleFullScreen.enter} variant="board"
+                                    size="icon">
+                                    <Presentation />
                                 </Button>
                             </Hint>
                             <Hint label='Text Editor'>
@@ -57,7 +63,7 @@ const ShowmoreTools = () => {
                             onClose={toggleDrawer}
                             direction='right'
                             style={{
-                                width: "35vw"
+                                width: "35vw",
                             }}
                         >
                             <div style={{
@@ -66,8 +72,8 @@ const ShowmoreTools = () => {
                                 display: "flex",
                                 alignItems: "center",
                                 justifyContent: "center",
-                                gap:"10px",
-                                flexDirection:"column"
+                                gap: "10px",
+                                flexDirection: "column"
                             }}>
                                 <h6 className='font-bold'>Currently, text editor is in progress!</h6>
                                 <Lottie play loop animationData={groovyWalkAnimation} />
@@ -85,7 +91,6 @@ const ShowmoreTools = () => {
                     <PencilRuler />
                 </Button>
             </Hint>
-
 
         </>
 

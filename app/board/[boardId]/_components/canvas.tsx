@@ -33,6 +33,7 @@ import { SelectionTools } from "./selection-tools";
 import { Path } from "./path";
 import { useDisableScrollBounce } from "@/hooks/use-disable-scroll-bounce";
 import { useDeleteLayers } from "@/hooks/use-delete-layers";
+import { FullScreen, useFullScreenHandle } from "react-full-screen";
 
 
 const MAX_LAYERS = 100;
@@ -83,8 +84,8 @@ const Canvas = ({ boardId }: CanvasProps) => {
                 type: layerType,
                 x: position.x,
                 y: position.y,
-                height: layerType === 4 ?  256 : 100,
-                width: layerType === 4 ?  400 : 100,
+                height: layerType === 4 ? 256 : 100,
+                width: layerType === 4 ? 400 : 100,
                 fill: lastUsedColor,
             });
             liveLayerIds.push(layerId);
@@ -404,6 +405,8 @@ const Canvas = ({ boardId }: CanvasProps) => {
     const deleteLayers = useDeleteLayers();
 
 
+    const handleFullScreen = useFullScreenHandle();
+
     useEffect(() => {
         function onKeyDown(e: KeyboardEvent) {
             switch (e.key) {
@@ -435,7 +438,7 @@ const Canvas = ({ boardId }: CanvasProps) => {
         <main className="h-full w-full relative bg-neutral-100 touch-none">
             <Info boardId={boardId} />
 
-            <Participants />
+            <Participants handleFullScreen={handleFullScreen} />
             <Toolbar
                 canvasState={canvasState}
                 setCanvasState={setcanvasState}
@@ -448,48 +451,58 @@ const Canvas = ({ boardId }: CanvasProps) => {
                 camera={camera}
                 setLastUsedColor={setLastUsedColor}
             />
-            <svg
-                className="h-[100vh] w-[100vw] overflow-auto bg-slate-100"
-                onWheel={onWheel}
-                onPointerMove={onPointMouse}
-                onPointerLeave={onPointerLeave}
-                onPointerUp={onPointerUp}
-                onPointerDown={onPointerDown}
-            >
-                <g
-                    style={{
-                        transform: `transalte ${camera.x}px, ${camera.y}px `,
-                    }}
+            <FullScreen handle={handleFullScreen}>
+                <svg
+                    className="h-[100vh] w-[100vw] overflow-auto bg-slate-100"
+                    onWheel={onWheel}
+                    onPointerMove={onPointMouse}
+                    onPointerLeave={onPointerLeave}
+                    onPointerUp={onPointerUp}
+                    onPointerDown={onPointerDown}
                 >
-                    {layerIds.map((layerId) => (
-                        <LayerPreview
-                            key={layerId}
-                            id={layerId}
-                            onLayerPointerDown={onLayerPointerDown}
-                            selectionColor={layerIdsToColorSelection[layerId]}
-                        />
-                    ))}
-                    <SelectionBox onResizeHandlePointerDown={onResizeHandlePointerDown} />
-                    {canvasState.mode === CanvasMode.SelectionNet && canvasState.current != null && (
-                        <rect
-                            className="fill-blue-500/5 stroke-blue-500 stroke-1"
-                            x={Math.min(canvasState.origin.x, canvasState.current.x)}
-                            y={Math.min(canvasState.origin.y, canvasState.current.y)}
-                            width={Math.abs(canvasState.origin.x - canvasState.current.x)}
-                            height={Math.abs(canvasState.origin.y - canvasState.current.y)}
-                        />
-                    )}
-                    <CursorsPresence />
-                    {pencilDraft != null && pencilDraft.length > 0 && (
-                        <Path
-                            points={pencilDraft}
-                            fill={colorToCss(lastUsedColor)}
-                            x={0}
-                            y={0}
-                        />
-                    )}
-                </g>
-            </svg>
+                    <pattern id="pattern-circles" x="0" y="0" width="20" height="20" patternUnits="userSpaceOnUse" patternContentUnits="userSpaceOnUse">
+                        <circle id="pattern-circle" cx="10" cy="10" r="1.1" fill="lightgray"></circle>
+                    </pattern>
+
+                    <rect id="rect" x="0" y="0" width="100%" height="100%" fill="url(#pattern-circles)"></rect>
+                    <g
+                        style={{
+                            transform: `transalte ${camera.x}px, ${camera.y}px `,
+                        }}
+                    >
+                        {layerIds.map((layerId) => (
+                            <LayerPreview
+                                key={layerId}
+                                id={layerId}
+                                onLayerPointerDown={onLayerPointerDown}
+                                selectionColor={layerIdsToColorSelection[layerId]}
+                            />
+                        ))}
+                        <SelectionBox onResizeHandlePointerDown={onResizeHandlePointerDown} />
+                        {canvasState.mode === CanvasMode.SelectionNet && canvasState.current != null && (
+                            <rect
+                                className="fill-blue-500/5 stroke-blue-500 stroke-1"
+                                x={Math.min(canvasState.origin.x, canvasState.current.x)}
+                                y={Math.min(canvasState.origin.y, canvasState.current.y)}
+                                width={Math.abs(canvasState.origin.x - canvasState.current.x)}
+                                height={Math.abs(canvasState.origin.y - canvasState.current.y)}
+                            />
+                        )}
+                        <CursorsPresence />
+                        {pencilDraft != null && pencilDraft.length > 0 && (
+                            <Path
+                                points={pencilDraft}
+                                fill={colorToCss(lastUsedColor)}
+                                x={0}
+                                y={0}
+                            />
+                        )}
+                    </g>
+
+                </svg>
+
+            </FullScreen>
+
         </main>
     );
 };
