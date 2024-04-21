@@ -451,6 +451,25 @@ const Canvas = ({ boardId }: CanvasProps) => {
                 camera={camera}
                 setLastUsedColor={setLastUsedColor}
             />
+            <div className="absolute bottom-3 left-[45%] flex flex-col bg-transparent gap-y-4 ">
+                <div className="max-w-sm text-center ">
+                    <ul className="mt-4 flex items-center justify-center space-x-2">
+                        <li className="flex items-center space-x-2 rounded-md bg-white shadow-md py-2 px-3 text-sm">
+                            <span>Reactions</span>
+                            <span className="block rounded border border-gray-300 px-1 text-xs font-medium uppercase text-gray-500">
+                                E
+                            </span>
+                        </li>
+
+                        <li className="flex items-center space-x-2 rounded-md bg-white shadow-md py-2 px-3 text-sm">
+                            <span>Escape</span>
+                            <span className="block rounded border border-gray-300 px-1 text-xs font-medium uppercase text-gray-500">
+                                esc
+                            </span>
+                        </li>
+                    </ul>
+                </div>
+            </div>
             <FullScreen handle={handleFullScreen}>
                 <svg
                     className="h-[100vh] w-[100vw] overflow-auto bg-slate-100"
