@@ -4,5 +4,6 @@
 * Change design of sticky notes --> DONE
 * Add a background to svg --> DONE
 * Persentaion mode --> DONE
-* Add a text editor
+* Add comment --> In progress
+* Add a text editor --> yet to start
 
