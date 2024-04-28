@@ -132,6 +132,10 @@ export enum CanvasMode {
   Resizing,
   Pencil,
 }
-
+type ReactionEvent = {
+  x: number;
+  y: number;
+  value: string;
+};
 
 export type Layer = RectangleLayer | EllipseLayer | PathLayer | TextLayer | NoteLayer

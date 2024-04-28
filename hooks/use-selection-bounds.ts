@@ -5,7 +5,6 @@ import { useStorage, useSelf } from "@/liveblocks.config";
 
 const boundingBox = (layers: Layer[]): XYWH | null => {
   const first = layers[0];
-  console.log("first", first?.type, first);
 
   if (!first) {
     return null;
