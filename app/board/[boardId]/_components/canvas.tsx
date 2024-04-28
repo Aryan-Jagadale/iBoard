@@ -9,8 +9,13 @@ import {
     useStorage,
     useOthersMapped,
     useSelf,
+    useBroadcastEvent,
+    useEventListener,
+    useMyPresence,
+    useOthers,
 } from "@/liveblocks.config";
 
+import { Smile } from 'lucide-react';
 import Info from "./info";
 import Participants from "./participants";
 import Toolbar from "./toolbar";
@@ -25,6 +30,13 @@ import {
     Side,
     XYWH,
 } from "@/types/canvas";
+import {
+    Reaction,
+    CursorState,
+    CursorMode,
+    ReactionEvent
+} from "@/types/reaction"
+
 import CursorsPresence from "./cursors-presence";
 import { connectionIdToColor, pointerEventToCanvasPoint, resizeBounds, findIntersectingLayersWithRectangle, penPointsToPathLayer, colorToCss } from "@/lib/utils";
 import { LayerPreview } from "./layer-preview";
@@ -34,8 +46,12 @@ import { Path } from "./path";
 import { useDisableScrollBounce } from "@/hooks/use-disable-scroll-bounce";
 import { useDeleteLayers } from "@/hooks/use-delete-layers";
 import { FullScreen, useFullScreenHandle } from "react-full-screen";
+import useInterval from "@/hooks/useInterval";
+import FlyingReaction from "./reactions/FlyingReaction";
+import ReactionSelector from "./reactions/ReactionSelector";
+import { Hint } from "@/components/hint";
 
-
+const COLORS = ["#DC2626", "#D97706", "#059669", "#7C3AED", "#DB2777"];
 const MAX_LAYERS = 100;
 
 interface CanvasProps {
@@ -51,6 +67,81 @@ const Canvas = ({ boardId }: CanvasProps) => {
     const [canvasState, setcanvasState] = useState<CanvasState>({
         mode: CanvasMode.None,
     });
+
+    //Reaction Code Setup start --->
+    const others = useOthers();
+    const [{ cursor }, updateMyPresence] = useMyPresence();
+    const broadcast = useBroadcastEvent();
+    const [state, setState] = useState<CursorState>({ mode: CursorMode.Hidden });
+    const [reactions, setReactions] = useState<Reaction[]>([]);
+
+    const setReaction = useCallback((reaction: string) => {
+        setState({ mode: CursorMode.Reaction, reaction, isPressed: false });
+    }, []);
+
+    useInterval(() => {
+        if (state.mode === CursorMode.Reaction && state.isPressed && cursor) {
+            setReactions((reactions) =>
+                reactions.concat([
+                    {
+                        point: { x: cursor.x, y: cursor.y },
+                        value: state.reaction,
+                        timestamp: Date.now(),
+                    },
+                ])
+            );
+            broadcast({
+                x: cursor.x,
+                y: cursor.y,
+                value: state.reaction,
+            });
+        }
+    }, 150);
+
+    useEffect(() => {
+
+        function onKeyUp(e: KeyboardEvent) {
+            if (e.key === "Escape") {
+                updateMyPresence({ message: "" });
+                setState({ mode: CursorMode.Hidden });
+            }
+            // else if (e.key === "e") {
+            //     setState({ mode: CursorMode.ReactionSelector });
+            // }
+        }
+
+        window.addEventListener("keyup", onKeyUp);
+
+        function onKeyDown(e: KeyboardEvent) {
+            if (e.key === "/") {
+                e.preventDefault();
+            }
+        }
+
+        window.addEventListener("keydown", onKeyDown);
+
+        return () => {
+            window.removeEventListener("keyup", onKeyUp);
+            window.removeEventListener("keydown", onKeyDown);
+        };
+    }, [updateMyPresence]);
+
+    useEventListener((eventData) => {
+        const event = eventData.event as ReactionEvent;
+        console.log("event", event);
+
+        setReactions((reactions) =>
+            reactions.concat([
+                {
+                    point: { x: event.x, y: event.y },
+                    value: event.value,
+                    timestamp: Date.now(),
+                },
+            ])
+        );
+    });
+
+    //Reaction Code Setup end --->
 
     const [camera, setCamera] = useState<Camera>({ x: 0, y: 0 });
     const [lastUsedColor, setLastUsedColor] = useState<Color>({
@@ -451,6 +542,7 @@ const Canvas = ({ boardId }: CanvasProps) => {
                 camera={camera}
                 setLastUsedColor={setLastUsedColor}
             />
+
             <FullScreen handle={handleFullScreen}>
                 <svg
                     className="h-[100vh] w-[100vw] overflow-auto bg-slate-100"
@@ -503,6 +595,104 @@ const Canvas = ({ boardId }: CanvasProps) => {
 
             </FullScreen>
 
+            {/*Reaction Components UI */}
+            <div className="absolute bottom-3 left-[45%] flex flex-col bg-transparent gap-y-4 ">
+                <div className="max-w-sm text-center ">
+
+                    <ul className="mt-4 flex items-center justify-center space-x-2" >
+                        <Hint label="Emojis" side="left">
+                            <li className="flex items-center space-x-2 rounded-md bg-white shadow-md py-2 px-3 text-sm" onClick={() => {
+                                setState({ mode: CursorMode.ReactionSelector });
+                            }}
+                            >
+                                <span className="block rounded text-xs font-medium uppercase text-gray-500">
+                                    <Smile height={"16px"} />
+                                </span>
+                            </li>
+                        </Hint>
+                        <Hint label="Press esc to stop emojis" side="right">
+                            <li className="flex items-center space-x-2 rounded-md bg-white shadow-md py-2 px-3 text-sm" onClick={() => {
+                                updateMyPresence({ message: "" });
+                                setState({ mode: CursorMode.Hidden });
+                            }}>
+                                <span className="block rounded border border-gray-300 px-1 text-xs font-medium uppercase text-gray-500">
+                                    esc
+                                </span>
+                            </li>
+
+                        </Hint>
+
+                    </ul>
+                </div>
+            </div>
+            <div
+                onPointerMove={(event) => {
+                    event.preventDefault();
+                    console.log("on pointermove");
+                    if (cursor == null || state.mode !== CursorMode.ReactionSelector) {
+                        console.log("on pointermove in if");
+                        updateMyPresence({
+                            cursor: {
+                                x: Math.round(event.clientX),
+                                y: Math.round(event.clientY),
+                            },
+                        });
+                    }
+                }}
+                onPointerLeave={() => {
+                    setState({
+                        mode: CursorMode.Hidden,
+                    });
+                    updateMyPresence({
+                        cursor: null,
+                    });
+                }}
+                onPointerDown={(event) => {
+                    updateMyPresence({
+                        cursor: {
+                            x: Math.round(event.clientX),
+                            y: Math.round(event.clientY),
+                        },
+                    });
+                    setState((state) =>
+                        state.mode === CursorMode.Reaction
+                            ? { ...state, isPressed: true }
+                            : state
+                    );
+                }}
+                onPointerUp={() => {
+                    setState((state) =>
+                        state.mode === CursorMode.Reaction
+                            ? { ...state, isPressed: false }
+                            : state
+                    );
+                }}
+            >
+                {reactions.map((reaction) => {
+                    return (
+                        <FlyingReaction
+                            key={reaction.timestamp.toString()}
+                            x={reaction.point.x}
+                            y={reaction.point.y}
+                            timestamp={reaction.timestamp}
+                            value={reaction.value}
+                        />
+                    );
+                })}
+
+
+
+                {state.mode === CursorMode.ReactionSelector && (
+                    <ReactionSelector
+                        setReaction={(reaction) => {
+                            setReaction(reaction);
+                        }}
+                    />
+                )}
+
+
+               
+            </div>
         </main>
     );
 };

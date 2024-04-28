@@ -14,8 +14,9 @@ const BoardIdPage = ({
 }: BoardIdPageProps) => {
     return (
         <>
-            <Room roomId={params.boardId} fallback={<Loading/>} >
+            <Room roomId={params.boardId} fallback={<Loading />} >
                 <Canvas boardId={params.boardId} />
+               
             </Room>
         </>
     )
