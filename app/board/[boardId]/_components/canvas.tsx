@@ -593,106 +593,107 @@ const Canvas = ({ boardId }: CanvasProps) => {
 
                 </svg>
 
-            </FullScreen>
 
-            {/*Reaction Components UI */}
-            <div className="absolute bottom-3 left-[45%] flex flex-col bg-transparent gap-y-4 ">
-                <div className="max-w-sm text-center ">
 
-                    <ul className="mt-4 flex items-center justify-center space-x-2" >
-                        <Hint label="Emojis" side="left">
-                            <li className="flex items-center space-x-2 rounded-md bg-white shadow-md py-2 px-3 text-sm" onClick={() => {
-                                setState({ mode: CursorMode.ReactionSelector });
-                            }}
-                            >
-                                <span className="block rounded text-xs font-medium uppercase text-gray-500">
-                                    <Smile height={"16px"} />
-                                </span>
-                            </li>
-                        </Hint>
-                        <Hint label="Press esc to stop emojis" side="right">
-                            <li className="flex items-center space-x-2 rounded-md bg-white shadow-md py-2 px-3 text-sm" onClick={() => {
-                                updateMyPresence({ message: "" });
-                                setState({ mode: CursorMode.Hidden });
-                            }}>
-                                <span className="block rounded border border-gray-300 px-1 text-xs font-medium uppercase text-gray-500">
-                                    esc
-                                </span>
-                            </li>
+                {/*Reaction Components UI */}
+                <div className="absolute bottom-3 left-[45%] flex flex-col bg-transparent gap-y-4 ">
+                    <div className="max-w-sm text-center ">
 
-                        </Hint>
+                        <ul className="mt-4 flex items-center justify-center space-x-2" >
+                            <Hint label="Emojis" side="left">
+                                <li className="flex items-center space-x-2 rounded-md bg-white shadow-md py-2 px-3 text-sm" onClick={() => {
+                                    setState({ mode: CursorMode.ReactionSelector });
+                                }}
+                                >
+                                    <span className="block rounded text-xs font-medium uppercase text-gray-500">
+                                        <Smile height={"16px"} />
+                                    </span>
+                                </li>
+                            </Hint>
+                            <Hint label="Press esc to stop emojis" side="right">
+                                <li className="flex items-center space-x-2 rounded-md bg-white shadow-md py-2 px-3 text-sm" onClick={() => {
+                                    updateMyPresence({ message: "" });
+                                    setState({ mode: CursorMode.Hidden });
+                                }}>
+                                    <span className="block rounded border border-gray-300 px-1 text-xs font-medium uppercase text-gray-500">
+                                        esc
+                                    </span>
+                                </li>
 
-                    </ul>
+                            </Hint>
+
+                        </ul>
+                    </div>
                 </div>
-            </div>
-            <div
-                onPointerMove={(event) => {
-                    event.preventDefault();
-                    console.log("on pointermove");
-                    if (cursor == null || state.mode !== CursorMode.ReactionSelector) {
-                        console.log("on pointermove in if");
+                <div
+                    onPointerMove={(event) => {
+                        event.preventDefault();
+                        console.log("on pointermove");
+                        if (cursor == null || state.mode !== CursorMode.ReactionSelector) {
+                            console.log("on pointermove in if");
+                            updateMyPresence({
+                                cursor: {
+                                    x: Math.round(event.clientX),
+                                    y: Math.round(event.clientY),
+                                },
+                            });
+                        }
+                    }}
+                    onPointerLeave={() => {
+                        setState({
+                            mode: CursorMode.Hidden,
+                        });
+                        updateMyPresence({
+                            cursor: null,
+                        });
+                    }}
+                    onPointerDown={(event) => {
                         updateMyPresence({
                             cursor: {
                                 x: Math.round(event.clientX),
                                 y: Math.round(event.clientY),
                             },
                         });
-                    }
-                }}
-                onPointerLeave={() => {
-                    setState({
-                        mode: CursorMode.Hidden,
-                    });
-                    updateMyPresence({
-                        cursor: null,
-                    });
-                }}
-                onPointerDown={(event) => {
-                    updateMyPresence({
-                        cursor: {
-                            x: Math.round(event.clientX),
-                            y: Math.round(event.clientY),
-                        },
-                    });
-                    setState((state) =>
-                        state.mode === CursorMode.Reaction
-                            ? { ...state, isPressed: true }
-                            : state
-                    );
-                }}
-                onPointerUp={() => {
-                    setState((state) =>
-                        state.mode === CursorMode.Reaction
-                            ? { ...state, isPressed: false }
-                            : state
-                    );
-                }}
-            >
-                {reactions.map((reaction) => {
-                    return (
-                        <FlyingReaction
-                            key={reaction.timestamp.toString()}
-                            x={reaction.point.x}
-                            y={reaction.point.y}
-                            timestamp={reaction.timestamp}
-                            value={reaction.value}
+                        setState((state) =>
+                            state.mode === CursorMode.Reaction
+                                ? { ...state, isPressed: true }
+                                : state
+                        );
+                    }}
+                    onPointerUp={() => {
+                        setState((state) =>
+                            state.mode === CursorMode.Reaction
+                                ? { ...state, isPressed: false }
+                                : state
+                        );
+                    }}
+                >
+                    {reactions.map((reaction) => {
+                        return (
+                            <FlyingReaction
+                                key={reaction.timestamp.toString()}
+                                x={reaction.point.x}
+                                y={reaction.point.y}
+                                timestamp={reaction.timestamp}
+                                value={reaction.value}
+                            />
+                        );
+                    })}
+
+
+
+                    {state.mode === CursorMode.ReactionSelector && (
+                        <ReactionSelector
+                            setReaction={(reaction) => {
+                                setReaction(reaction);
+                            }}
                         />
-                    );
-                })}
+                    )}
 
 
 
-                {state.mode === CursorMode.ReactionSelector && (
-                    <ReactionSelector
-                        setReaction={(reaction) => {
-                            setReaction(reaction);
-                        }}
-                    />
-                )}
-
-
-               
-            </div>
+                </div>
+            </FullScreen>
         </main>
     );
 };
