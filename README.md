@@ -46,10 +46,7 @@ A collaborative, real-time whiteboard. Packed with features such as real-time da
 
 ## Demo
 <div align="center">
-   <video controls width="640" height="360">
-        <source src="iboard.webm" type="video/webm">
-        Your browser does not support the video tag.
-    </video>
+       <img alt="demo" src="/public/iboard.gif">
 </div>
 
 
