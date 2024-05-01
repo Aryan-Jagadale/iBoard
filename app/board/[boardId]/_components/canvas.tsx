@@ -65,7 +65,7 @@ const Canvas = ({ boardId }: CanvasProps) => {
     const pencilDraft = useSelf((me) => me.presence.pencilDraft);
 
     const [canvasState, setcanvasState] = useState<CanvasState>({
-        mode: CanvasMode.None,
+        mode: CanvasMode.None
     });
 
     //Reaction Code Setup start --->
@@ -161,6 +161,7 @@ const Canvas = ({ boardId }: CanvasProps) => {
                 | LayerType.Ellipse
                 | LayerType.Rectangle
                 | LayerType.Text
+                | LayerType.Path
                 | LayerType.Note,
             position: Point
         ) => {
