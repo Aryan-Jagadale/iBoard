@@ -161,7 +161,6 @@ const Canvas = ({ boardId }: CanvasProps) => {
                 | LayerType.Ellipse
                 | LayerType.Rectangle
                 | LayerType.Text
-                | LayerType.Path
                 | LayerType.Note,
             position: Point
         ) => {

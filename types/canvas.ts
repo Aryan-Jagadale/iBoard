@@ -44,7 +44,7 @@ export type PathLayer = {
   height: number;
   width: number;
   fill: Color;
-  points?: number[][];
+  points: number[][];
   value?: string;
 };
 
@@ -111,7 +111,6 @@ export type CanvasState =
         | LayerType.Ellipse
         | LayerType.Rectangle
         | LayerType.Note
-        | LayerType.Path
         | LayerType.Text;
     }
   | {
