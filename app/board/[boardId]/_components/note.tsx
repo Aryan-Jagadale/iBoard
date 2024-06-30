@@ -62,7 +62,7 @@ export const Note = ({
         outline: selectionColor ? `1px solid ${selectionColor}` : "none",
         backgroundColor: fill ? colorToCss(fill) : "#000",
       }}
-      className="shadow-md drop-shadow-xl rounded-lg"
+      className="shadow-md drop-shadow-xl rounded-lg select-none"
     >
 
       <div className={cn("w-full h-full flex flex-col justify-between  rounded-lg border border-gray-400 mb-6 py-5 px-4", font.className)} style={{
