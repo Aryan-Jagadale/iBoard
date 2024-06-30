@@ -17,7 +17,6 @@ interface SelectionToolsProps {
     setLastUsedColor: (color: Color) => void;
 };
 
-
 export const SelectionTools = memo(({
     camera,
     setLastUsedColor,
@@ -87,18 +86,34 @@ export const SelectionTools = memo(({
     console.log(selectionBounds);
     console.log("camera",camera);
     
-    
-
     const x = selectionBounds.width / 2 + selectionBounds.x + 0;
     const y = selectionBounds.y + 0;
+    const [offsetX, offsetY] = [50, 100];
+    
+    const checkPosition = () => {
+      const windowWidth = window.innerWidth;
+      const windowHeight = window.innerHeight;
+      
+      let newX = x;
+      let newY = y;
+      
+      if (x - offsetX < 0) newX = offsetX;
+      if (x + offsetX > windowWidth) newX = windowWidth - offsetX;
+      if (y - offsetY < 0) newY = offsetY;
+      if (y + offsetY > windowHeight) newY = windowHeight - offsetY;
+      
+      return [newX, newY];
+    };
+    
+    const [adjustedX, adjustedY] = checkPosition();
 
     return (
         <div
           className="absolute p-3 rounded-xl bg-white shadow-sm border flex select-none"
           style={{
             transform: `translate(
-              calc(${x}px - 50%),
-              calc(${y - 16}px - 100%)
+              calc(${adjustedX}px - 50%),
+              calc(${adjustedY -16}px - 100%)
             )`
           }}
         >
@@ -140,6 +155,5 @@ export const SelectionTools = memo(({
       );
 
 })
-
 
 SelectionTools.displayName = "SelectionTools";
