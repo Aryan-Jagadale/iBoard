@@ -83,7 +83,7 @@ export const SelectionTools = memo(({
     if (!selectionBounds) {
       return null;
     }
-  
+
     const x = selectionBounds.width / 2 + selectionBounds.x + camera.x;
     const y = selectionBounds.y + camera.y;
 

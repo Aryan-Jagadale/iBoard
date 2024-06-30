@@ -128,7 +128,6 @@ const Canvas = ({ boardId }: CanvasProps) => {
 
     useEventListener((eventData) => {
         const event = eventData.event as ReactionEvent;
-        console.log("event", event);
 
         setReactions((reactions) =>
             reactions.concat([

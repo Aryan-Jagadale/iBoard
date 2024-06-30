@@ -46,7 +46,7 @@ A collaborative, real-time whiteboard. Packed with features such as real-time da
 
 ## Demo
 <div align="center">
-       <img alt="demo" src="/public/iboard.gif">
+       <img alt="demo" src="./public/iboard.gif">
 </div>
 
 
