@@ -1,6 +1,7 @@
 import Image from "next/image"
 import Link from "next/link"
-import Logo from "@/public/logo.svg"
+import Logo from "@/public/logo.svg";
+import DashboardNavbarSearch from "./search";
 
 const Navbar = () => {
   return (
@@ -15,8 +16,10 @@ const Navbar = () => {
         <div className="text-sm font-medium flex items-center">Sandbox</div>
       </div>
       <div className="flex items-center space-x-4">
-        Search
+        <DashboardNavbarSearch />
       </div>
+
+      
     </div>
   )
 }
