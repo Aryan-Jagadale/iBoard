@@ -22,7 +22,6 @@ import {
 import { useRouter } from "next/navigation";
 
 
-
 interface NewBoardButtonProps {
   orgId: string;
   disabled?: boolean;
@@ -51,7 +50,8 @@ export const NewBoardButton = ({
         })
         .catch(() => toast.error("Failed to create board"));
     } else if (type === "Code Editor") {
-      router.push(`/codEditor/123456`);
+      router.push(`/code`);
+      return;
     }
 
   }

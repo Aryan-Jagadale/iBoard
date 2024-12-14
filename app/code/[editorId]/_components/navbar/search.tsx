@@ -12,9 +12,7 @@ export default function DashboardNavbarSearch() {
   useEffect(() => {
     const delayDebounceFn = setTimeout(() => {
       if (search) {
-        router.push(`/codEditor?q=${search}`);
-      } else {
-        router.push(`/codEditor`);
+        router.push(`/code?q=${search}`);
       }
     }, 300);
 

@@ -5,7 +5,10 @@ import Navbar from "./_components/navbar/navbar";
 
 const CodeEditor = dynamic(() => import('./_components/editor/index'), { ssr: false, loading: () => <div>Loading...</div> });
 
-const Page = () => {
+const Page = async () => {
+
+
+
   return (
     <ThemeProvider
       attribute="class"
@@ -21,7 +24,7 @@ const Page = () => {
         </div>
 
       </div>
-    </ThemeProvider>
+     </ThemeProvider>
   )
 }
 

@@ -10,9 +10,41 @@
  *
  * Learn more at https://developers.cloudflare.com/workers/
  */
+import { json } from 'itty-router-extras';
+
+
 
 export default {
 	async fetch(request, env, ctx): Promise<Response> {
-		return new Response('Hello World!');
+
+		const url = new URL(request.url);
+		const path = url.pathname;
+		const method = request.method;
+
+
+
+		console.log(path);
+
+		if (path === '/api/user' && method === 'GET') {
+			const params = url.searchParams;
+
+			if (params.has('id')) {
+
+				// const id = params.get('id') as string;
+
+				// const res = await db.query.user.findFirst({
+				// 	where: (user, { eq }) => eq(user.id, id)
+				// });
+				// return json(res ?? {});
+			} else {
+				// const res = await db.select().from(user).all();
+				// return new Response(JSON.stringify(res));
+			}
+
+		}
+
+
+
+
 	},
 } satisfies ExportedHandler<Env>;

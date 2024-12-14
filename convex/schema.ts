@@ -22,15 +22,15 @@ export default defineSchema({
     .index("by_user_board", ["userId", "boardId"])
     .index("by_user_board_org", ["userId", "boardId", "orgId"]),
 
-    users: defineTable({
-      id: v.string(),
-      name: v.string(),
-      email: v.string(),
-      image: v.optional(v.string()),
-      generations: v.optional(v.number()),
-    })
-    .index("unique_id", ["id"])
-    .index("unique_email", ["email"]),
+    // users: defineTable({
+    //   id: v.string(),
+    //   name: v.string(),
+    //   email: v.string(),
+    //   image: v.optional(v.string()),
+    //   generations: v.optional(v.number()),
+    // })
+    // .index("unique_id", ["id"])
+    // .index("unique_email", ["email"]),
   
     virtualboxes: defineTable({
       id: v.string(),
@@ -43,18 +43,18 @@ export default defineSchema({
         v.literal("public"),
         v.literal("private")
       )),
-      userId: v.string(),
+      authorId: v.string(),
     })
     .index("unique_id", ["id"])
-    .index("user_virtualboxes", ["userId"]),
+    .index("user_virtualboxes", ["authorId"]),
   
     usersToVirtualboxes: defineTable({
-      userId: v.string(),
+      authorId: v.string(),
       virtualboxId: v.string(),
       sharedOn: v.optional(v.number()),
     })
-    .index("user_links", ["userId"])
+    .index("user_links", ["authorId"])
     .index("virtualbox_links", ["virtualboxId"])
-    .index("user_virtualbox_link", ["userId", "virtualboxId"])
+    .index("user_virtualbox_link", ["authorId", "virtualboxId"])
 
 });

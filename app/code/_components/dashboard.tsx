@@ -1,5 +1,4 @@
 'use client'
-
 import {
     Code2,
     FolderDot,
@@ -8,18 +7,25 @@ import {
     Settings,
     Users,
 } from "lucide-react";
-import CustomButton from "@/components/ui/customButton";
 import { Button } from "@/components/ui/button";
 import { useState } from "react";
 import { useSearchParams } from "next/navigation";
-import { toast } from "sonner";
 import NewProjectModal from "./newProject";
+import { useQuery } from "convex/react";
+import { Id } from "@/convex/_generated/dataModel";
+import { api } from "@/convex/_generated/api";
+import DashboardProjects from "./projects";
+import DashboardSharedWithMe from "./shared";
 
 
 type TScreen = "projects" | "shared" | "settings" | "search";
 
 
-const Dashboard = () => {
+const Dashboard = ({
+    userId,
+}: {
+    userId: string
+}) => {
 
     const [screen, setScreen] = useState<TScreen>("projects");
     const [newProjectModalOpen, setNewProjectModalOpen] = useState(false);
@@ -33,7 +39,34 @@ const Dashboard = () => {
     const searchParams = useSearchParams();
     const q = searchParams.get("q");
 
+    const virtualboxes = useQuery(api.virtualBoxes.getVirtualBoxes, {
+        authorId: userId,
+    });
+    
+    const vbIds = virtualboxes?.map((vb) => vb._id) ?? [];
 
+    const sharedVB = useQuery(api.virtualBoxes.getVitualBoxSharedWith, {
+        authorId: userId,
+        vbIds: vbIds,
+    });
+
+    let shared = virtualboxes && virtualboxes.map(vb => {
+        // Find the shared entry for this virtual box
+        const sharedEntry: any = sharedVB && sharedVB.find((s:any) => s.virtualboxId === vb._id);
+        return {
+            id: vb.id,
+            name: vb.name,
+            type: vb.type,
+            sharedOn: sharedEntry ? new Date(sharedEntry.sharedOn * 1000) : new Date(),
+            author: {
+                id: vb.authorId,
+                name: vb.name, // Using name as a placeholder, you might want to fetch actual author details
+                email: `${vb.authorId}@example.com`, // Placeholder email
+                image: null // Placeholder for user image
+            }
+        }
+
+    });
     return (
         <>
             <NewProjectModal
@@ -98,10 +131,13 @@ const Dashboard = () => {
                     </div>
                 </div>
                 {screen === "projects" ? (
-                    <div> Projects</div>
+                    <DashboardProjects virtualboxes={virtualboxes ?? []} q={q} />
                 ) : screen === "shared" ? (
-                    <div> Shared</div>
-                ) : screen === "settings" ? null : null}
+                    <DashboardSharedWithMe shared={shared} />
+                    // <div>Shared</div>
+                ) : screen === "settings" ? 
+                <div>Settings</div>
+                : null}
             </div>
 
 

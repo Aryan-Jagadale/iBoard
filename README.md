@@ -57,6 +57,6 @@ A collaborative, real-time whiteboard. Packed with features such as real-time da
 * Add a background to svg --> DONE
 * Persentaion mode --> DONE
 * Add Emoji for user --> DONE
-* Add a support for canvas ui --> yet to start
-* Add a text editor (for svg) --> yet to start
+* In code editor shared func
+* Profile logout in code editor
 

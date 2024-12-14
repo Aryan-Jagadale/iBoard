@@ -112,3 +112,8 @@ enabled = true
 # [[vectorize]]
 # binding = "MY_INDEX"
 # index_name = "my-index"
+
+[[d1_databases]]
+binding = "DB"
+database_name = "ccce-db"
+database_id = "d8995874-6f5b-44b4-94e4-5984c3b38d84"
