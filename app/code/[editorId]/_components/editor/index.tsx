@@ -9,7 +9,8 @@ import { Button } from '@/components/ui/button';
 import { useRef, useState } from 'react';
 import monaco from "monaco-editor";
 import Sidebar from './sidebar/index';
-
+import { useClerk } from "@clerk/nextjs";
+import {Tabs} from "@/components/ui/tabs";
 
 
 const CodeEditor = () => {
@@ -20,13 +21,23 @@ const CodeEditor = () => {
         isDisabled: false,
         message: "",
     });
+    const [tabs, setTabs] = useState<any[]>([{
+        id: 1,
+        name: 'index.html',
+    },{
+        id: 2,
+        name: 'style.css',
+    }]);
+
+    const clerk = useClerk();
 
     const handleEditorMount: OnMount = (editor, monaco) => {
         editorRef.current = editor;
-    }
+    };
+
     return (
         <>
-            <Sidebar/>
+            <Sidebar />
             <ResizablePanelGroup direction="horizontal">
                 <ResizablePanel
                     maxSize={80}
@@ -41,30 +52,46 @@ const CodeEditor = () => {
                         <Button variant='secondary' size={'sm'} className='min-w-20 justify-between'>
                             style.css
                         </Button>
+                        {tabs.map((tab) => (
+                            <Tabs
+                                key={tab.id}
+                                // saved={tab.saved}
+                                // selected={activeId === tab.id}
+                                onClick={() => {}}
+                                // onClose={() => {}}
+                            >
+                                {tab.name}
+                            </Tabs>
+                        ))}
                     </div>
 
                     <div
                         ref={editorContainerRef}
                         className="grow w-full overflow-hidden rounded-lg relative"
                     >
-                        <Editor
-                            height={"100vh"}
-                            defaultLanguage="typescript"
-                            theme="vs-dark"
-                            onMount={handleEditorMount}
-                            options={{
-                                minimap: {
-                                    enabled: false,
-                                },
-                                padding: {
-                                    bottom: 4,
-                                    top: 4,
-                                },
-                                scrollBeyondLastLine: false,
-                                fixedOverflowWidgets: true,
-                                fontFamily: "var(--font-geist-mono)",
-                            }}
-                        />
+                        {
+                            clerk.loaded ? (
+                                <Editor
+                                    height={"100vh"}
+                                    defaultLanguage="typescript"
+                                    theme="vs-dark"
+                                    onMount={handleEditorMount}
+                                    options={{
+                                        minimap: {
+                                            enabled: false,
+                                        },
+                                        padding: {
+                                            bottom: 4,
+                                            top: 4,
+                                        },
+                                        scrollBeyondLastLine: false,
+                                        fixedOverflowWidgets: true,
+                                        fontFamily: "var(--font-geist-mono)",
+                                    }}
+                                />
+                            ) : null
+                        }
+
                     </div>
 
                 </ResizablePanel>
