@@ -10,7 +10,7 @@ import { useRef, useState } from 'react';
 import monaco from "monaco-editor";
 import Sidebar from './sidebar/index';
 import { useClerk } from "@clerk/nextjs";
-import {Tabs} from "@/components/ui/tabs";
+import Tab from "@/components/ui/tab";
 
 
 const CodeEditor = () => {
@@ -46,14 +46,8 @@ const CodeEditor = () => {
                     className="flex flex-col p-2"
                 >
                     <div className="h-10 w-full flex gap-2">
-                        <Button variant='secondary' size={'sm'} className='min-w-20 justify-between'>
-                            index.html
-                        </Button>
-                        <Button variant='secondary' size={'sm'} className='min-w-20 justify-between'>
-                            style.css
-                        </Button>
                         {tabs.map((tab) => (
-                            <Tabs
+                            <Tab
                                 key={tab.id}
                                 // saved={tab.saved}
                                 // selected={activeId === tab.id}
@@ -61,7 +55,7 @@ const CodeEditor = () => {
                                 // onClose={() => {}}
                             >
                                 {tab.name}
-                            </Tabs>
+                            </Tab>
                         ))}
                     </div>
 
@@ -111,9 +105,8 @@ const CodeEditor = () => {
                         <ResizableHandle />
                         <ResizablePanel defaultSize={50} minSize={20} className="p-2 flex flex-col">
                             <div className='h-10 w-full flex gap-2 shrink-0 overflow-auto tab-scroll'>
-                                <Button variant='secondary' size={'sm'} className='min-w-20 justify-between'>
-                                    Terminal
-                                </Button>
+                                <Tab selected>Node</Tab>
+                                <Tab>Terminal</Tab>
                             </div>
                             <div className='w-full relative grow h-full overflow-hidden rounded-lg bg-secondary'></div>
 
