@@ -12,6 +12,72 @@ import Sidebar from './sidebar/index';
 import { useClerk } from "@clerk/nextjs";
 import Tab from "@/components/ui/tab";
 
+// Will be received from the server
+const dummyFolder = [
+    {
+        id: 1,
+        name: 'index.html',
+        type:'file',
+        content: '<h1>Hello World</h1>',
+    },
+    {
+        id: 2,
+        name: 'style.css',
+        type:'file',
+        content: 'body { background-color: red; }',
+    },
+    {
+        id:3,
+        name: 'js',
+        type: 'folder',
+        children: [
+            {
+                id: 4,
+                name: 'script.js',
+                type: 'file',
+                content: 'console.log("Hello World")',
+            },
+            {
+                id:5,
+                name:'js',
+                type: 'folder',
+                children: [
+                    {
+                        id: 6,
+                        name: 'script.js',
+                        type: 'file',
+                        content: 'console.log("Hello World")',
+                    },
+                    {
+                        id: 7,
+                        name: 'script.js',
+                        type: 'file',
+                        content: 'console.log("Hello World")',
+                    },
+                    {
+                        id:8,
+                        name: 'utils',
+                        type: 'folder',
+                        children: [
+                            {
+                                id: 9,
+                                name: 'math.js',
+                                type: 'file',
+                                content: 'export const add = (a, b) => a + b',
+                            },
+                            {
+                                id: 10,
+                                name: 'string.js',
+                                type: 'file',
+                                content: 'export const capitalize = (str) => str.toUpperCase()',
+                            }
+                        ]
+                    }
+                ]
+            }
+        ]
+    }
+]
 
 const CodeEditor = () => {
     const editorRef = useRef<null | monaco.editor.IStandaloneCodeEditor>(null);
@@ -37,8 +103,18 @@ const CodeEditor = () => {
 
     return (
         <>
-            <Sidebar />
             <ResizablePanelGroup direction="horizontal">
+            <ResizablePanel
+                    maxSize={40}
+                    minSize={15}
+                    // defaultSize={10}
+                    className="flex flex-col p-2"
+            >
+            <Sidebar data={dummyFolder} />
+
+            </ResizablePanel>
+            <ResizableHandle />
+
                 <ResizablePanel
                     maxSize={80}
                     minSize={30}
