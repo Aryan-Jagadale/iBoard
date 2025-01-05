@@ -11,23 +11,26 @@ import monaco from "monaco-editor";
 import Sidebar from './sidebar/index';
 import { useClerk } from "@clerk/nextjs";
 import Tab from "@/components/ui/tab";
+import { processFileType } from '@/lib/utils';
 
 // Will be received from the server
 const dummyFolder = [
     {
         id: 1,
         name: 'index.html',
-        type:'file',
+        type: 'file',
         content: '<h1>Hello World</h1>',
+        saved: true,
     },
     {
         id: 2,
         name: 'style.css',
-        type:'file',
+        type: 'file',
         content: 'body { background-color: red; }',
+        saved: true,
     },
     {
-        id:3,
+        id: 3,
         name: 'js',
         type: 'folder',
         children: [
@@ -36,10 +39,11 @@ const dummyFolder = [
                 name: 'script.js',
                 type: 'file',
                 content: 'console.log("Hello World")',
+                saved: true,
             },
             {
-                id:5,
-                name:'js',
+                id: 5,
+                name: 'js',
                 type: 'folder',
                 children: [
                     {
@@ -47,15 +51,18 @@ const dummyFolder = [
                         name: 'script.js',
                         type: 'file',
                         content: 'console.log("Hello World")',
+                        saved: true,
+
                     },
                     {
                         id: 7,
                         name: 'script.js',
                         type: 'file',
                         content: 'console.log("Hello World")',
+                        saved: true,
                     },
                     {
-                        id:8,
+                        id: 8,
                         name: 'utils',
                         type: 'folder',
                         children: [
@@ -64,11 +71,14 @@ const dummyFolder = [
                                 name: 'math.js',
                                 type: 'file',
                                 content: 'export const add = (a, b) => a + b',
+                                saved: true,
+
                             },
                             {
                                 id: 10,
                                 name: 'string.js',
                                 type: 'file',
+                                saved: true,
                                 content: 'export const capitalize = (str) => str.toUpperCase()',
                             }
                         ]
@@ -82,18 +92,13 @@ const dummyFolder = [
 const CodeEditor = () => {
     const editorRef = useRef<null | monaco.editor.IStandaloneCodeEditor>(null);
     const editorContainerRef = useRef<HTMLDivElement>(null);
-    const generateWidgetRef = useRef<HTMLDivElement>(null);
-    const [disableAccess, setDisableAccess] = useState({
-        isDisabled: false,
-        message: "",
-    });
-    const [tabs, setTabs] = useState<any[]>([{
-        id: 1,
-        name: 'index.html',
-    },{
-        id: 2,
-        name: 'style.css',
-    }]);
+
+    const [editorLanguage, setEditorLanguage] = useState<string | undefined>(
+        undefined
+    );
+    const [activeFile, setActiveFile] = useState<string | null>(null);
+    const [activeId, setActiveId] = useState<string>("");
+    const [tabs, setTabs] = useState<any[]>([]);
 
     const clerk = useClerk();
 
@@ -101,19 +106,59 @@ const CodeEditor = () => {
         editorRef.current = editor;
     };
 
+    const selectFile = (tab: any) => {
+        if (tab.id === activeId) return;
+        const exists = tabs.find((t) => t.id === tab.id);
+        setTabs((prev) => {
+            if (exists) {
+                setActiveId(exists.id);
+                return prev;
+            }
+            return [...prev, tab];
+        });
+
+        setEditorLanguage(processFileType(tab.name));
+        setActiveFile(tab.content);
+        setActiveId(tab.id);
+    };
+
+    const closeTab = (id: string) => {
+        const numTabs = tabs.length;
+        const index = tabs.findIndex((t) => t.id === id);
+        if (index === -1) return;
+        const nextId =
+          activeId === id
+            ? numTabs === 1
+              ? null
+              : index < numTabs - 1
+              ? tabs[index + 1].id
+              : tabs[index - 1].id
+            : activeId;
+    
+        setTabs((prev) => prev.filter((t) => t.id !== id));
+    
+        if (!nextId) {
+          setActiveId("");
+          setActiveFile(null);
+        } else {
+          const nextTab = tabs.find((t) => t.id === nextId);
+          if (nextTab) selectFile(nextTab);
+        }
+      };
+
     return (
         <>
             <ResizablePanelGroup direction="horizontal">
-            <ResizablePanel
+                <ResizablePanel
                     maxSize={40}
                     minSize={15}
-                    // defaultSize={10}
+                    defaultSize={15}
                     className="flex flex-col p-2"
-            >
-            <Sidebar data={dummyFolder} />
+                >
+                    <Sidebar data={dummyFolder} selectFile={selectFile} activeId={activeId}/>
 
-            </ResizablePanel>
-            <ResizableHandle />
+                </ResizablePanel>
+                <ResizableHandle />
 
                 <ResizablePanel
                     maxSize={80}
@@ -121,14 +166,14 @@ const CodeEditor = () => {
                     defaultSize={60}
                     className="flex flex-col p-2"
                 >
-                    <div className="h-10 w-full flex gap-2">
+                    <div className="h-9 w-full flex gap-1 overflow-scroll">
                         {tabs.map((tab) => (
                             <Tab
                                 key={tab.id}
-                                // saved={tab.saved}
-                                // selected={activeId === tab.id}
-                                onClick={() => {}}
-                                // onClose={() => {}}
+                                saved={tab.saved ?? false}
+                                onClick={() => selectFile(tab)}
+                                selected={activeId === tab.id}
+                                onClose={() => closeTab(tab.id)}
                             >
                                 {tab.name}
                             </Tab>
@@ -137,7 +182,7 @@ const CodeEditor = () => {
 
                     <div
                         ref={editorContainerRef}
-                        className="grow w-full overflow-hidden rounded-lg relative"
+                        className="grow w-full overflow-hidden relative"
                     >
                         {
                             clerk.loaded ? (
@@ -146,6 +191,21 @@ const CodeEditor = () => {
                                     defaultLanguage="typescript"
                                     theme="vs-dark"
                                     onMount={handleEditorMount}
+                                    onChange={(value) => {
+                                        if (value === activeFile) {
+                                          setTabs((prev) =>
+                                            prev.map((tab) =>
+                                              tab.id === activeId ? { ...tab, saved: true } : tab
+                                            )
+                                          );
+                                        } else {
+                                          setTabs((prev) =>
+                                            prev.map((tab) =>
+                                              tab.id === activeId ? { ...tab, saved: false } : tab
+                                            )
+                                          );
+                                        }
+                                    }}
                                     options={{
                                         minimap: {
                                             enabled: false,
@@ -158,6 +218,8 @@ const CodeEditor = () => {
                                         fixedOverflowWidgets: true,
                                         fontFamily: "var(--font-geist-mono)",
                                     }}
+                                    language={editorLanguage}
+                                    value={activeFile ?? ""}
                                 />
                             ) : null
                         }

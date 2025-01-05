@@ -15,13 +15,15 @@ import {
   ContextMenuTrigger,
 } from "@/components/ui/context-menu"
 
-const FileTreeNode = ({ node, level = 0, onDelete, onRename, onAddFile, onAddFolder }: { 
+const FileTreeNode = ({ node, level = 0, onDelete, onRename, onAddFile, onAddFolder,onClickFile,activeId }: { 
   node: any; 
   level?: number; 
   onDelete: (nodeId: string) => void; 
   onRename: (nodeId: string, newName: string) => void;
   onAddFile: (nodeId: string, fileName: string) => void;
   onAddFolder: (nodeId: string, folderName: string) => void;
+  onClickFile: (node: any) => void;
+  activeId: string;
 }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [isRenaming, setIsRenaming] = useState(false);
@@ -59,9 +61,9 @@ const FileTreeNode = ({ node, level = 0, onDelete, onRename, onAddFile, onAddFol
   };
 
   const renderContent = () => (
-    <div className={`flex items-center space-x-2 h-6 leading-6 ${node.type === 'file' ? 'ml-6' : ''}`}>
+    <div className={`flex items-center space-x-2 h-6 leading-6 ${node.type === 'file' ? 'ml-6' : ''} `} onClick={toggleFolder}>
       {node.type === 'folder' && (
-        <span onClick={toggleFolder} className="cursor-pointer">
+        <span className="cursor-pointer">
           {isOpen ? <ChevronDown size={16} /> : <ChevronRight size={16} />}
         </span>
       )}
@@ -81,7 +83,7 @@ const FileTreeNode = ({ node, level = 0, onDelete, onRename, onAddFile, onAddFol
           />
         </form>
       ) : (
-        <span className="text-sm text-gray-400 hover:text-gray-100 hover:cursor-pointer">
+        <span className={`text-sm text-gray-400 hover:text-gray-100 hover:cursor-pointer ${node.id === activeId ? 'text-white' : ''}`} onClick={() => node.type === 'file' ? onClickFile(node) : null}>
           {node.name}
         </span>
       )}
@@ -109,6 +111,8 @@ const FileTreeNode = ({ node, level = 0, onDelete, onRename, onAddFile, onAddFol
                     onRename={onRename}
                     onAddFile={onAddFile}
                     onAddFolder={onAddFolder}
+                    onClickFile={onClickFile}
+                    activeId={activeId}
                   />
                 ))}
             </div>
@@ -129,7 +133,7 @@ const FileTreeNode = ({ node, level = 0, onDelete, onRename, onAddFile, onAddFol
   );
 };
 
-const FileExplorer = ({ data }: any) => {
+const FileExplorer = ({ data,selectFile,activeId }: any) => {
   const [fileTree, setFileTree] = useState(data);
   const [newItemName, setNewItemName] = useState("");
   const [dialogType, setDialogType] = useState<"file" | "folder" | null>(null);
@@ -215,6 +219,10 @@ const FileExplorer = ({ data }: any) => {
     setNewItemName("");
   };
 
+  const handleClickFile = (node: any) => {
+    selectFile(node);
+  };
+
   return (
     <div className="px-2 rounded shadow">
       <div className="my-3 space-x-2 cursor-pointer flex items-center justify-end gap-1">
@@ -249,6 +257,8 @@ const FileExplorer = ({ data }: any) => {
               onRename={renameNode}
               onAddFile={handleAddFile}
               onAddFolder={handleAddFolder}
+              onClickFile={handleClickFile}
+              activeId={activeId}
             />
           ))}
       </div>

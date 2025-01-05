@@ -22,10 +22,10 @@ export default function Tab({
       onClick={onClick ?? undefined}
       size={"sm"}
       variant={"secondary"}
-      className={`font-normal select-none ${
+      className={`font-normal select-none rounded-none ${
         selected
-          ? "bg-neutral-700 hover:bg-neutral-600 text-foreground"
-          : "text-muted-foreground"
+          ? "bg-[#1e1e1e] hover:bg-neutral-600 text-foreground"
+          : "text-muted-foreground "
       }`}
     >
       {children}
