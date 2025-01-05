@@ -12,6 +12,7 @@ import Sidebar from './sidebar/index';
 import { useClerk } from "@clerk/nextjs";
 import Tab from "@/components/ui/tab";
 import { processFileType } from '@/lib/utils';
+import PreviewWindow from './preview-window';
 
 // Will be received from the server
 const dummyFolder = [
@@ -19,7 +20,7 @@ const dummyFolder = [
         id: 1,
         name: 'index.html',
         type: 'file',
-        content: '<h1>Hello World</h1>',
+        content: '<h1>Hello World!</h1>',
         saved: true,
     },
     {
@@ -99,6 +100,7 @@ const CodeEditor = () => {
     const [activeFile, setActiveFile] = useState<string | null>(null);
     const [activeId, setActiveId] = useState<string>("");
     const [tabs, setTabs] = useState<any[]>([]);
+    const [serverFiles, setServerFiles] = useState(dummyFolder);
 
     const clerk = useClerk();
 
@@ -144,14 +146,36 @@ const CodeEditor = () => {
           const nextTab = tabs.find((t) => t.id === nextId);
           if (nextTab) selectFile(nextTab);
         }
-      };
+    };
+
+        // Update the file content dynamically
+        const updateFileContent = (id: string, newContent: string, folder = serverFiles): any[] => {
+        return folder.map(( fileOrFolder:any )  => {
+                if (fileOrFolder.id === Number(id)) {
+                    return { ...fileOrFolder, content: newContent, saved: false };
+                }
+                if (fileOrFolder.type === "folder") {
+                    return { ...fileOrFolder, children: updateFileContent(id, newContent, fileOrFolder.children) };
+                }
+                return fileOrFolder;
+            });
+        };
+
+    const handleEditorChange = (value: string | undefined) => {
+        if (activeId && value !== undefined) {
+            const updatedFiles = updateFileContent(activeId, value);
+            setServerFiles(updatedFiles);
+        }
+    };
+
+      
 
     return (
         <>
             <ResizablePanelGroup direction="horizontal">
                 <ResizablePanel
                     maxSize={40}
-                    minSize={15}
+                    minSize={0}
                     defaultSize={15}
                     className="flex flex-col p-2"
                 >
@@ -192,6 +216,7 @@ const CodeEditor = () => {
                                     theme="vs-dark"
                                     onMount={handleEditorMount}
                                     onChange={(value) => {
+                                        handleEditorChange(value)
                                         if (value === activeFile) {
                                           setTabs((prev) =>
                                             prev.map((tab) =>
@@ -230,15 +255,12 @@ const CodeEditor = () => {
                 <ResizableHandle />
                 <ResizablePanel defaultSize={40}>
                     <ResizablePanelGroup direction="vertical">
-                        <ResizablePanel defaultSize={50} minSize={20} className="p-2 flex flex-col">
-                            <div className='h-10 w-full flex gap-2 shrink-0 overflow-auto tab-scroll'>
-                                <Button variant='secondary' size={'sm'} className='min-w-20 justify-between'>
-                                    localhost
-                                </Button>
-                            </div>
-                            <div className='w-full relative grow h-full overflow-hidden rounded-lg bg-secondary'></div>
+                        <ResizablePanel defaultSize={50} minSize={20} collapsedSize={4} collapsible  className="p-2 flex flex-col">
 
-
+                        <PreviewWindow
+                            type={"html-css-js"}
+                            files={serverFiles}
+                        />
                         </ResizablePanel>
                         <ResizableHandle />
                         <ResizablePanel defaultSize={50} minSize={20} className="p-2 flex flex-col">
