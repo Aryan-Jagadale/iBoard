@@ -38,7 +38,7 @@ import { useApiMutation } from "@/hooks/use-api-mutation";
 import { toast } from "sonner";
 import { ulid } from 'ulid';
 
-type TOptions = "react" | "node" | "python" | "more";
+type TOptions = "react" | "node" | "python" | "more" | "html-css";
 
 const data: {
   id: TOptions;
@@ -47,6 +47,13 @@ const data: {
   description: string;
   disabled: boolean;
 }[] = [
+  {
+    id: "html-css",
+    name: "HTML/CSS",
+    icon: "/icons/file_type_html.svg",
+    description: "A markup language for the web",
+    disabled: false,
+  },
   {
     id: "react",
     name: "React",
@@ -96,7 +103,7 @@ export default function NewProjectModal({
   open: boolean;
   setOpen: (open: boolean) => void;
 }) {
-  const [selected, setSelected] = useState<TOptions>("react");
+  const [selected, setSelected] = useState<TOptions>("html-css");
   const [loading, setLoading] = useState(false);
 
   const user = useUser();
@@ -157,6 +164,7 @@ export default function NewProjectModal({
               </div>
             </button>
           ))}
+
         </div>
 
         <Form {...form}>

@@ -43,7 +43,7 @@ export const getVirtualBoxes = query({
 export const postVirtualBoxes = mutation({
   args: {
     data: v.object({
-      type: v.union(v.literal("react"), v.literal("node")),
+      type: v.union(v.literal("react"), v.literal("node"),v.literal("html-css")),
       userId: v.string(),
       name: v.string(),
       visibility: v.union(v.literal("public"), v.literal("private")),

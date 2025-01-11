@@ -37,7 +37,10 @@ export default defineSchema({
       name: v.string(),
       type: v.union(
         v.literal("react"),
-        v.literal("node")
+        v.literal("node"),
+        v.literal("html-css"),
+        v.literal("python"),
+
       ),
       visibility: v.optional(v.union(
         v.literal("public"),

@@ -74,7 +74,7 @@ const Dashboard = ({
                 setOpen={setNewProjectModalOpen}
             />
 
-            <div className="flex grow w-full">
+            <div className="flex grow w-full" style={{ height: "calc(100vh - 4rem)" }}>
                 <div className="w-56 shrink-0 border-r border-border p-4 justify-between flex flex-col">
                     <div className="flex flex-col">
                         <Button

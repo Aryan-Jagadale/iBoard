@@ -5,6 +5,7 @@ import Image from "next/image";
 import { toast } from "sonner";
 import { api } from "@/convex/_generated/api";
 import { useApiMutation } from "@/hooks/use-api-mutation";
+import { formatDistanceToNow } from "date-fns";
 
 export default function DashboardProjects({
   virtualboxes,
@@ -29,12 +30,28 @@ export default function DashboardProjects({
       toast(`Project ${virtualbox.name} is now ${newVisibility}`);
   };
 
+
+  const icon = (type: string) => {
+    switch (type) {
+      case "react":
+        return "/project-icons/react.svg";
+      case "node":
+        return "/project-icons/node.svg";
+      case "html-css":
+        return "/icons/file_type_html.svg";
+      case "python":
+        return "/project-icons/python.svg";
+      default:
+        return "/icons/file_type_html.svg";
+    }
+  }
+
   return (
     <div className="grow p-4 flex flex-col">
       <div className="text-xl font-medium mb-8">
         {q && q.length > 0 ? `Showing search results for: ${q}` : "My Projects"}
       </div>
-      <div className="grow w-full grid lg:grid-cols-3 2xl:grid-cols-4 md:grid-cols-2 gap-4">
+      <div className="grow w-full grid lg:grid-cols-3 2xl:grid-cols-4 md:grid-cols-2 gap-4 overflow-y-auto">
         {virtualboxes.map((virtualbox) => {
           if (q && q.length > 0) {
             if (!virtualbox.name.toLowerCase().includes(q.toLowerCase())) {
@@ -46,11 +63,7 @@ export default function DashboardProjects({
               <div className="flex space-x-2 items-center justify-start w-full">
                 <Image
                   alt="icon"
-                  src={
-                    virtualbox.type === "react"
-                      ? "/project-icons/react.svg"
-                      : "/project-icons/node.svg"
-                  }
+                  src={icon(virtualbox.type)}
                   width={20}
                   height={20}
                 />
@@ -68,18 +81,18 @@ export default function DashboardProjects({
                 <div className="flex items-center">
                   {virtualbox.visibility === "public" ? (
                     <>
-                      <Lock className="mr-2 h-4 w-4" />
-                      <span>Make Private</span>
+                      <Globe className="mr-2 h-4 w-4" />
+                      <span>Public</span>
                     </>
                   ) : (
                     <>
-                      <Globe className="mr-2 h-4 w-4" />
-                      <span>Make Public</span>
+                    <Lock className="mr-2 h-4 w-4" />
+                    <span>Private</span>
                     </>
                   )}
                 </div>
                 <div className="flex items-center">
-                  <Clock className="w-3 h-3 mr-2" /> 3d ago
+                  <Clock className="w-3 h-3 mr-2" /> {formatDistanceToNow(new Date(Math.floor(virtualbox?._creationTime)), { addSuffix: true })}
                 </div>
               </div>
             </ProjectCard>
