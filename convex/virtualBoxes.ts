@@ -15,10 +15,7 @@ export const getVitualBoxSharedWith = query({
       .query("usersToVirtualboxes")
       .withIndex("user_links", (q) => q.eq("authorId", args.authorId))
       .collect();
-
-
     return sharedWith ?? [];
-
 
   }
 })
