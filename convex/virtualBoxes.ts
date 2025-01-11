@@ -41,4 +41,66 @@ export const getVirtualBoxes = query({
       return virtualBoxes;
 
   },
-})
+});
+
+export const postVirtualBoxes = mutation({
+  args: {
+    data: v.object({
+      type: v.union(v.literal("react"), v.literal("node")),
+      userId: v.string(),
+      name: v.string(),
+      visibility: v.union(v.literal("public"), v.literal("private")),
+      virtualboxId: v.string(),
+    })
+  },
+  handler: async (ctx, args) => {
+    const identity = await ctx.auth.getUserIdentity();
+
+    if (!identity) {
+      throw new Error("Unauthorized");
+    }  
+
+    const vbox = await ctx.db.insert("virtualboxes", {
+      authorId: args.data.userId,
+      name: args.data.name,
+      visibility: args.data.visibility,
+      type: args.data.type,
+      virtualboxId: args.data.virtualboxId
+    });
+
+    return vbox;
+
+  },
+});
+
+export const updateVirtualbox = mutation({
+  args: {
+    id: v.id('virtualboxes'),
+    visibility: v.union(v.literal("public"), v.literal("private")),
+  },
+  handler: async (ctx, args) => {
+    const identity = await ctx.auth.getUserIdentity();
+
+    if (!identity) {
+      throw new Error("Unauthorized");
+    }
+    await ctx.db.patch(args.id, { visibility: args.visibility });
+  },
+
+});
+
+export const deleteVirtualbox = mutation({
+  args: {
+    id: v.id('virtualboxes'),
+  },
+  handler: async (ctx, args) => {
+    const identity = await ctx.auth.getUserIdentity();
+
+    if (!identity) {
+      throw new Error("Unauthorized");
+    }
+
+    await ctx.db.delete(args.id);
+  },
+
+});

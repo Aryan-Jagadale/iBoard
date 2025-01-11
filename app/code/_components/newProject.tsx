@@ -31,9 +31,12 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { Input } from "@/components/ui/input";
 import { Loader2 } from "lucide-react";
 import { useUser } from "@clerk/nextjs";
-// import { createVirtualbox } from "@/lib/actions";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
+import { api } from "@/convex/_generated/api";
+import { useApiMutation } from "@/hooks/use-api-mutation";
+import { toast } from "sonner";
+import { ulid } from 'ulid';
 
 type TOptions = "react" | "node" | "python" | "more";
 
@@ -98,6 +101,7 @@ export default function NewProjectModal({
 
   const user = useUser();
   const router = useRouter();
+  const { mutate, pending }  = useApiMutation(api.virtualBoxes.postVirtualBoxes);
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -109,12 +113,18 @@ export default function NewProjectModal({
 
   async function onSubmit(values: z.infer<typeof formSchema>) {
     if (!user.isSignedIn) return;
-
-    const virtualboxData = { type: selected, userId: user.user.id, ...values };
+    const virtualboxData = { type: selected, userId: user.user.id, virtualboxId:ulid() , ...values };
     setLoading(true);
+    try {
+      await mutate({ data: virtualboxData });
+      toast.success("SandBox created");
 
-    const id =  "12";
-    router.push(`/code/${id}`);
+    } catch (error) {
+      toast.error("Failed to create board");
+    }finally{
+      setLoading(false);
+      setOpen(false);
+    }
   }
 
   return (

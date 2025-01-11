@@ -33,7 +33,7 @@ export default defineSchema({
     // .index("unique_email", ["email"]),
   
     virtualboxes: defineTable({
-      id: v.string(),
+      virtualboxId: v.string(),
       name: v.string(),
       type: v.union(
         v.literal("react"),
@@ -45,7 +45,7 @@ export default defineSchema({
       )),
       authorId: v.string(),
     })
-    .index("unique_id", ["id"])
+    .index("unique_id", ["virtualboxId"])
     .index("user_virtualboxes", ["authorId"]),
   
     usersToVirtualboxes: defineTable({

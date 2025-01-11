@@ -1,10 +1,10 @@
-// import { Virtualbox } from "@/lib/types";
 import ProjectCard from "./projectCard";
 import ProjectCardDropdown from "./projectCard/dropdown";
 import { Clock, Globe, Lock } from "lucide-react";
 import Image from "next/image";
 import { toast } from "sonner";
-// import { deleteVirtualbox, updateVirtualbox } from "@/lib/actions";
+import { api } from "@/convex/_generated/api";
+import { useApiMutation } from "@/hooks/use-api-mutation";
 
 export default function DashboardProjects({
   virtualboxes,
@@ -13,20 +13,20 @@ export default function DashboardProjects({
   virtualboxes: any[];
   q: string | null;
 }) {
+  const { mutate, pending }  = useApiMutation(api.virtualBoxes.deleteVirtualbox);
+  const update  = useApiMutation(api.virtualBoxes.updateVirtualbox);
+  
   const onDelete = async (virtualbox: any) => {
+    await mutate({id: virtualbox._id});
     toast(`Project ${virtualbox.name} deleted.`);
-    // await deleteVirtualbox(virtualbox.id);
   };
 
   const onVisibilityChange = async (virtualbox: any) => {
     const newVisibility =
       virtualbox.visibility === "public" ? "private" : "public";
 
-    toast(`Project ${virtualbox.name} is now ${newVisibility}`);
-    // await updateVirtualbox({
-    //   id: virtualbox.id,
-    //   visibility: newVisibility,
-    // });
+      await update.mutate({id: virtualbox._id, visibility: newVisibility});
+      toast(`Project ${virtualbox.name} is now ${newVisibility}`);
   };
 
   return (
@@ -42,7 +42,7 @@ export default function DashboardProjects({
             }
           }
           return (
-            <ProjectCard key={virtualbox.id} id={virtualbox.id}>
+            <ProjectCard key={virtualbox.virtualboxId} id={virtualbox.virtualboxId}>
               <div className="flex space-x-2 items-center justify-start w-full">
                 <Image
                   alt="icon"

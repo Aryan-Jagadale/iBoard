@@ -12,8 +12,6 @@ const MainPage = async () => {
   if (!user) {
     redirect("/");
   }
-
-  console.log("USER", user);
   
 
   return (

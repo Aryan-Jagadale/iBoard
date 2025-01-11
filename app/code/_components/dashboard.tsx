@@ -51,18 +51,18 @@ const Dashboard = ({
     });
 
     let shared = virtualboxes && virtualboxes.map(vb => {
-        // Find the shared entry for this virtual box
+
         const sharedEntry: any = sharedVB && sharedVB.find((s:any) => s.virtualboxId === vb._id);
         return {
-            id: vb.id,
+            id: vb.virtualboxId,
             name: vb.name,
             type: vb.type,
             sharedOn: sharedEntry ? new Date(sharedEntry.sharedOn * 1000) : new Date(),
             author: {
                 id: vb.authorId,
-                name: vb.name, // Using name as a placeholder, you might want to fetch actual author details
-                email: `${vb.authorId}@example.com`, // Placeholder email
-                image: null // Placeholder for user image
+                name: vb.name, 
+                email: `${vb.authorId}@example.com`,
+                image: null 
             }
         }
 
