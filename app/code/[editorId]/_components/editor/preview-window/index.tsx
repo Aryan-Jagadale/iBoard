@@ -1,8 +1,8 @@
 "use client";
 
-import React, { useRef, useState } from "react";
+import React, { useRef, useState, useEffect } from "react";
 import { toast } from "sonner";
-import { ChevronLeft, ChevronRight, Link, RotateCw } from "lucide-react";
+import { Link, RotateCw } from "lucide-react";
 
 export default function PreviewWindow({
     type,
@@ -13,32 +13,22 @@ export default function PreviewWindow({
 }) {
     const ref = useRef<HTMLIFrameElement>(null);
     const [iframeKey, setIframeKey] = useState(0);
+    const [srcDoc, setSrcDoc] = useState<string>("");
+    useEffect(() => {
+        const htmlFile = files.find((file) => file.name === "index.html");
+        const cssFile = files.find((file) => file.name === "style.css");
+        if (htmlFile && cssFile) {
+            const combinedHTML = htmlFile.content.replace(
+                '</head>',
+                `<style>${cssFile.content}</style></head>`
+            );
 
-    const generateHTMLContent = () => {
-        const htmlFile = files.find((file) => file.name === "index.html")?.content || "";
-        const cssFile = files.find((file) => file.name === "style.css")?.content || "";
-        const jsFiles = files
-            .flatMap((file) => (file.type === "folder" ? file.children : file))
-            .filter((file) => file.name.endsWith(".js"))
-            .map((file) => file.content)
-            .join("\n");
+            setSrcDoc(combinedHTML);
+        }
+    }, [files]);
+    
 
-        return `
-            <!DOCTYPE html>
-            <html lang="en">
-            <head>
-                <meta charset="UTF-8">
-                <meta name="viewport" content="width=device-width, initial-scale=1.0">
-                <title>Preview</title>
-                <style>${cssFile}</style>
-            </head>
-            <body>
-                ${htmlFile}
-                <script>${jsFiles}</script>
-            </body>
-            </html>
-        `;
-    };
+    
 
     return (
         <>
@@ -75,7 +65,7 @@ export default function PreviewWindow({
                     ref={ref}
                     width={"100%"}
                     height={"100%"}
-                    srcDoc={generateHTMLContent()} // Dynamically inject content
+                    srcDoc={srcDoc}
                     sandbox="allow-scripts allow-same-origin"
                 />
             </div>

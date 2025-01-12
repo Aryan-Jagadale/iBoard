@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { getIconForFile, getIconForFolder, getIconForOpenFolder } from "vscode-icons-js";
 import { Input } from '@/components/ui/input';
 import { FilePlus, FolderPlus, CopyMinus, ChevronRight, ChevronDown } from 'lucide-react';
@@ -134,7 +134,7 @@ const FileTreeNode = ({ node, level = 0, onDelete, onRename, onAddFile, onAddFol
 };
 
 const FileExplorer = ({ data,selectFile,activeId }: any) => {
-  const [fileTree, setFileTree] = useState(data);
+  const [fileTree, setFileTree] = useState<any[]>([]);
   const [newItemName, setNewItemName] = useState("");
   const [dialogType, setDialogType] = useState<"file" | "folder" | null>(null);
 
@@ -222,6 +222,10 @@ const FileExplorer = ({ data,selectFile,activeId }: any) => {
   const handleClickFile = (node: any) => {
     selectFile(node);
   };
+
+  useEffect(() => {
+    setFileTree(data);
+  }, [data]);
 
   return (
     <div className="px-2 rounded shadow">

@@ -26,7 +26,6 @@ const Page = async ({ params }: CodePageProps) => {
 
 
 
-
   return (
     <ThemeProvider
       attribute="class"

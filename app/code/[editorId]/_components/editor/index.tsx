@@ -1,94 +1,94 @@
 "use client";
-import Editor, { OnMount } from '@monaco-editor/react';
+import Editor, { BeforeMount,OnMount } from '@monaco-editor/react';
 import {
     ResizableHandle,
     ResizablePanel,
     ResizablePanelGroup,
 } from "@/components/ui/resizable"
-import { Button } from '@/components/ui/button';
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import monaco from "monaco-editor";
 import Sidebar from './sidebar/index';
 import { useClerk } from "@clerk/nextjs";
 import Tab from "@/components/ui/tab";
 import { processFileType } from '@/lib/utils';
 import PreviewWindow from './preview-window';
+import { getVirualBoxRequest } from '@/lib/axios';
 
 // Will be received from the server
-const dummyFolder = [
-    {
-        id: 1,
-        name: 'index.html',
-        type: 'file',
-        content: '<h1>Hello World!</h1>',
-        saved: true,
-    },
-    {
-        id: 2,
-        name: 'style.css',
-        type: 'file',
-        content: 'body { background-color: red; }',
-        saved: true,
-    },
-    {
-        id: 3,
-        name: 'js',
-        type: 'folder',
-        children: [
-            {
-                id: 4,
-                name: 'script.js',
-                type: 'file',
-                content: 'console.log("Hello World")',
-                saved: true,
-            },
-            {
-                id: 5,
-                name: 'js',
-                type: 'folder',
-                children: [
-                    {
-                        id: 6,
-                        name: 'script.js',
-                        type: 'file',
-                        content: 'console.log("Hello World")',
-                        saved: true,
+// const dummyFolder = [
+//     {
+//         id: 1,
+//         name: 'index.html',
+//         type: 'file',
+//         content: '<h1>Hello World!</h1>',
+//         saved: true,
+//     },
+//     {
+//         id: 2,
+//         name: 'style.css',
+//         type: 'file',
+//         content: 'body { background-color: red; }',
+//         saved: true,
+//     },
+//     {
+//         id: 3,
+//         name: 'js',
+//         type: 'folder',
+//         children: [
+//             {
+//                 id: 4,
+//                 name: 'script.js',
+//                 type: 'file',
+//                 content: 'console.log("Hello World")',
+//                 saved: true,
+//             },
+//             {
+//                 id: 5,
+//                 name: 'js',
+//                 type: 'folder',
+//                 children: [
+//                     {
+//                         id: 6,
+//                         name: 'script.js',
+//                         type: 'file',
+//                         content: 'console.log("Hello World")',
+//                         saved: true,
 
-                    },
-                    {
-                        id: 7,
-                        name: 'script.js',
-                        type: 'file',
-                        content: 'console.log("Hello World")',
-                        saved: true,
-                    },
-                    {
-                        id: 8,
-                        name: 'utils',
-                        type: 'folder',
-                        children: [
-                            {
-                                id: 9,
-                                name: 'math.js',
-                                type: 'file',
-                                content: 'export const add = (a, b) => a + b',
-                                saved: true,
+//                     },
+//                     {
+//                         id: 7,
+//                         name: 'script.js',
+//                         type: 'file',
+//                         content: 'console.log("Hello World")',
+//                         saved: true,
+//                     },
+//                     {
+//                         id: 8,
+//                         name: 'utils',
+//                         type: 'folder',
+//                         children: [
+//                             {
+//                                 id: 9,
+//                                 name: 'math.js',
+//                                 type: 'file',
+//                                 content: 'export const add = (a, b) => a + b',
+//                                 saved: true,
 
-                            },
-                            {
-                                id: 10,
-                                name: 'string.js',
-                                type: 'file',
-                                saved: true,
-                                content: 'export const capitalize = (str) => str.toUpperCase()',
-                            }
-                        ]
-                    }
-                ]
-            }
-        ]
-    }
-]
+//                             },
+//                             {
+//                                 id: 10,
+//                                 name: 'string.js',
+//                                 type: 'file',
+//                                 saved: true,
+//                                 content: 'export const capitalize = (str) => str.toUpperCase()',
+//                             }
+//                         ]
+//                     }
+//                 ]
+//             }
+//         ]
+//     }
+// ]
 
 const CodeEditor = () => {
     const editorRef = useRef<null | monaco.editor.IStandaloneCodeEditor>(null);
@@ -100,7 +100,8 @@ const CodeEditor = () => {
     const [activeFile, setActiveFile] = useState<string | null>(null);
     const [activeId, setActiveId] = useState<string>("");
     const [tabs, setTabs] = useState<any[]>([]);
-    const [serverFiles, setServerFiles] = useState(dummyFolder);
+    const [serverFiles, setServerFiles] = useState<any[]>([]);
+    const [serverFileType, setServerFileType] = useState("")
 
     const clerk = useClerk();
 
@@ -148,10 +149,9 @@ const CodeEditor = () => {
         }
     };
 
-        // Update the file content dynamically
-        const updateFileContent = (id: string, newContent: string, folder = serverFiles): any[] => {
+    const updateFileContent = (id: string, newContent: string, folder = serverFiles): any[] => {
         return folder.map(( fileOrFolder:any )  => {
-                if (fileOrFolder.id === Number(id)) {
+                if (fileOrFolder.id === id) {
                     return { ...fileOrFolder, content: newContent, saved: false };
                 }
                 if (fileOrFolder.type === "folder") {
@@ -163,12 +163,37 @@ const CodeEditor = () => {
 
     const handleEditorChange = (value: string | undefined) => {
         if (activeId && value !== undefined) {
-            const updatedFiles = updateFileContent(activeId, value);
+            const updatedFiles:any[] = updateFileContent(activeId, value);
             setServerFiles(updatedFiles);
         }
     };
 
-      
+    const handleEditorWillMount: BeforeMount = (monaco) => {
+        monaco.editor.addKeybindingRules([
+          {
+            keybinding: monaco.KeyMod.CtrlCmd | monaco.KeyCode.KeyG,
+            command: "null",
+          },
+        ]);
+      };
+
+    useEffect(() => {
+        async function fetchData() {
+            const editorId = window.location.pathname.split("/")[2];
+            // console.log("editorId::>",editorId);        
+            const responseVB:any = await getVirualBoxRequest(`/api/getVirtualBoxData?virtualboxId=${editorId}`);
+            // console.log("responseVB::>",responseVB);
+            if(!responseVB.data) return;
+
+            if (responseVB.status === 200) {
+                if (responseVB.data && responseVB.data && responseVB.data.type) {
+                    setServerFiles(JSON.parse(responseVB.data.virtualBoxFiles));
+                    setServerFileType(responseVB.data.type)
+                } 
+            }
+        }
+        fetchData();
+    },[]);
 
     return (
         <>
@@ -179,7 +204,7 @@ const CodeEditor = () => {
                     defaultSize={15}
                     className="flex flex-col p-2"
                 >
-                    <Sidebar data={dummyFolder} selectFile={selectFile} activeId={activeId}/>
+                    <Sidebar data={serverFiles} selectFile={selectFile} activeId={activeId}/>
 
                 </ResizablePanel>
                 <ResizableHandle />
@@ -215,6 +240,7 @@ const CodeEditor = () => {
                                     defaultLanguage="typescript"
                                     theme="vs-dark"
                                     onMount={handleEditorMount}
+                                    beforeMount={handleEditorWillMount}
                                     onChange={(value) => {
                                         handleEditorChange(value)
                                         if (value === activeFile) {
@@ -258,7 +284,7 @@ const CodeEditor = () => {
                         <ResizablePanel defaultSize={50} minSize={20} collapsedSize={4} collapsible  className="p-2 flex flex-col">
 
                         <PreviewWindow
-                            type={"html-css-js"}
+                            type={serverFileType}
                             files={serverFiles}
                         />
                         </ResizablePanel>

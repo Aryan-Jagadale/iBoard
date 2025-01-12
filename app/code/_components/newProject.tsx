@@ -37,6 +37,7 @@ import { api } from "@/convex/_generated/api";
 import { useApiMutation } from "@/hooks/use-api-mutation";
 import { toast } from "sonner";
 import { ulid } from 'ulid';
+import {  postRequest } from "@/lib/axios";
 
 type TOptions = "react" | "node" | "python" | "more" | "html-css";
 
@@ -120,14 +121,24 @@ export default function NewProjectModal({
 
   async function onSubmit(values: z.infer<typeof formSchema>) {
     if (!user.isSignedIn) return;
-    const virtualboxData = { type: selected, userId: user.user.id, virtualboxId:ulid() , ...values };
+    const virtualboxData = {
+      type: selected, 
+      userId: user.user.id, 
+      virtualboxId: ulid(), 
+      ...values 
+    };
     setLoading(true);
     try {
+      const response = await postRequest("/api/initializeVBData", virtualboxData) as { status: number };
+      if (!response || response?.status !== 200) {
+        throw new Error("Failed to initialize VB data");
+      }
       await mutate({ data: virtualboxData });
+      router.push(`/code/${virtualboxData.virtualboxId}`);
       toast.success("SandBox created");
-
     } catch (error) {
       toast.error("Failed to create board");
+      console.error("Error:", error);
     }finally{
       setLoading(false);
       setOpen(false);
