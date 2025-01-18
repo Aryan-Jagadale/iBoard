@@ -24,37 +24,34 @@ export default function EditorTerminal({ files }: { files: any[] }) {
       letterSpacing: 0,
     });
 
-    // Add fit addon
+  
     const fitAddon = new FitAddon();
     terminal.loadAddon(fitAddon);
 
-    // Open terminal
     terminal.open(terminalRef.current);
     fitAddon.fit();
 
-    // Redirect console output to the terminal
     const originalConsoleLog = console.log;
     console.log = (...args: any[]) => {
       terminal.writeln(args.map(String).join(" "));
-      originalConsoleLog(...args); // Also log to the browser console
+      originalConsoleLog(...args); 
     };
 
     // Function to execute JavaScript code
     const executeScript = async (scriptContent: string, fileName: string) => {
-      terminal.writeln(`\x1b[32mExecuting ${fileName}...\x1b[0m`); // Green text for the filename
+      terminal.writeln(`\x1b[32mExecuting ${fileName}...\x1b[0m`);
       try {
         const sandbox = new Function(scriptContent);
         sandbox(); // Execute the script
       } catch (err:any) {
-        terminal.writeln(`\x1b[31mError in ${fileName}: ${err.message}\x1b[0m`); // Red text for errors
+        terminal.writeln(`\x1b[31mError in ${fileName}: ${err.message}\x1b[0m`);
       }
     };
 
-    // Execute all JavaScript files in the list
     const executeAllScripts = async () => {
       const jsFiles = files.filter((file) => file.name.endsWith(".js"));
       if (jsFiles.length === 0) {
-        terminal.writeln("\x1b[33mNo JavaScript files found to execute.\x1b[0m"); // Yellow text for warnings
+        terminal.writeln("\x1b[33mNo JavaScript files found to execute.\x1b[0m"); 
         return;
       }
 
@@ -68,7 +65,7 @@ export default function EditorTerminal({ files }: { files: any[] }) {
 
     // Cleanup
     return () => {
-      console.log = originalConsoleLog; // Restore the original console.log
+      console.log = originalConsoleLog;
       terminal.dispose();
     };
   }, [files]);
@@ -78,7 +75,7 @@ export default function EditorTerminal({ files }: { files: any[] }) {
       <div className="w-full h-8 bg-zinc-800 flex items-center justify-between px-4">
         <span className="text-zinc-400 text-sm">Terminal</span>
       </div>
-      <div ref={terminalRef} className="w-full h-64 p-2" />
+      <div ref={terminalRef} className="w-full h-96 p-2" />
     </div>
   );
 }

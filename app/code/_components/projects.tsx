@@ -19,10 +19,12 @@ export default function DashboardProjects({
   const update  = useApiMutation(api.virtualBoxes.updateVirtualbox);
   
   const onDelete = async (virtualbox: any) => {
-    // const resposne:any = await deleteRequest(`/api/deleteVirtualBoxData/${virtualbox._id}`);
-    // console.log("resposne", resposne);
+    const resposne:any = await deleteRequest(`/api/deleteVirtualBoxData`, {virtualboxId: virtualbox.virtualboxId});
+    if (resposne.status !== 200) {
+      return toast("Failed to delete project");
+    }
     
-    // await mutate({id: virtualbox._id});
+    await mutate({id: virtualbox._id});
     toast(`Project ${virtualbox.name} deleted.`);
   };
 
@@ -37,7 +39,9 @@ export default function DashboardProjects({
   const icon = (type: string) => {
     switch (type) {
       case "react":
-        return "/project-icons/react.svg";
+        return "/icons/file_type_reactjs.svg";
+      case "html-css-js":
+        return "/icons/file_type_js.svg";
       case "node":
         return "/project-icons/node.svg";
       case "html-css":

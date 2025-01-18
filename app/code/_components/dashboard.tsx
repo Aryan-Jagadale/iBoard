@@ -18,7 +18,7 @@ import DashboardProjects from "./projects";
 import DashboardSharedWithMe from "./shared";
 
 
-type TScreen = "projects" | "shared" | "settings" | "search";
+type TScreen = "projects" | "about" | "search";
 
 
 const Dashboard = ({
@@ -29,7 +29,6 @@ const Dashboard = ({
 
     const [screen, setScreen] = useState<TScreen>("projects");
     const [newProjectModalOpen, setNewProjectModalOpen] = useState(false);
-    const [aboutModalOpen, setAboutModalOpen] = useState(false);
 
     const activeScreen = (s: TScreen) => {
         if (screen === s) return "justify-start";
@@ -97,46 +96,21 @@ const Dashboard = ({
                         </Button>
                         <Button
                             variant={"ghost"}
-                            onClick={() => setScreen("shared")}
-                            className={activeScreen("shared")}
-                        >
-                            <Users className="w-4 h-4 mr-2" />
-                            Shared With Me
-                        </Button>
-                        <Button
-                            variant={"ghost"}
-                            onClick={() => setScreen("settings")}
-                            className={activeScreen("settings")}
-                        >
-                            <Settings className="w-4 h-4 mr-2" />
-                            Settings
-                        </Button>
-                    </div>
-                    <div className="flex flex-col">
-                        <Button
-                            variant={"ghost"}
-                            className="justify-start font-normal text-muted-foreground"
-                        >
-                            <Code2 className="w-4 h-4 mr-2" />
-                            Github Repo
-                        </Button>
-                        <Button
-                            onClick={() => setAboutModalOpen(true)}
-                            variant={"ghost"}
-                            className="justify-start font-normal text-muted-foreground"
+                            onClick={() => setScreen("about")}
+                            className={activeScreen("about")}
                         >
                             <HelpCircle className="w-4 h-4 mr-2" />
                             About
                         </Button>
+                        
                     </div>
                 </div>
                 {screen === "projects" ? (
                     <DashboardProjects virtualboxes={virtualboxes ?? []} q={q} />
-                ) : screen === "shared" ? (
-                    <DashboardSharedWithMe shared={shared} />
+                ) : screen === "about" ? (
+                    <DashboardSharedWithMe />
                     // <div>Shared</div>
-                ) : screen === "settings" ? 
-                <div>Settings</div>
+                ) 
                 : null}
             </div>
 
