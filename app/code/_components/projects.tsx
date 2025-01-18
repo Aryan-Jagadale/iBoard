@@ -6,6 +6,7 @@ import { toast } from "sonner";
 import { api } from "@/convex/_generated/api";
 import { useApiMutation } from "@/hooks/use-api-mutation";
 import { formatDistanceToNow } from "date-fns";
+import { deleteRequest } from "@/lib/axios";
 
 export default function DashboardProjects({
   virtualboxes,
@@ -18,14 +19,16 @@ export default function DashboardProjects({
   const update  = useApiMutation(api.virtualBoxes.updateVirtualbox);
   
   const onDelete = async (virtualbox: any) => {
-    await mutate({id: virtualbox._id});
+    // const resposne:any = await deleteRequest(`/api/deleteVirtualBoxData/${virtualbox._id}`);
+    // console.log("resposne", resposne);
+    
+    // await mutate({id: virtualbox._id});
     toast(`Project ${virtualbox.name} deleted.`);
   };
 
   const onVisibilityChange = async (virtualbox: any) => {
     const newVisibility =
       virtualbox.visibility === "public" ? "private" : "public";
-
       await update.mutate({id: virtualbox._id, visibility: newVisibility});
       toast(`Project ${virtualbox.name} is now ${newVisibility}`);
   };

@@ -27,3 +27,14 @@ export const getVirualBoxRequest = async (url: string) => {
     return error;
   }
 }
+
+export const deleteRequest = async (url: string) => {
+  try {
+    console.log("url", url);
+    
+    let response = await axios.delete(`${expressURL}${url}`);
+    return response;
+  } catch (error) {
+    return error;
+  }
+}
