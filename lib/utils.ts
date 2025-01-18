@@ -206,3 +206,4 @@ export function processFileType(file: string) {
   if (ending) return ending;
   return "plaintext";
 }
+

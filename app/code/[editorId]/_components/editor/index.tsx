@@ -13,82 +13,7 @@ import Tab from "@/components/ui/tab";
 import { processFileType } from '@/lib/utils';
 import PreviewWindow from './preview-window';
 import { getVirualBoxRequest } from '@/lib/axios';
-
-// Will be received from the server
-// const dummyFolder = [
-//     {
-//         id: 1,
-//         name: 'index.html',
-//         type: 'file',
-//         content: '<h1>Hello World!</h1>',
-//         saved: true,
-//     },
-//     {
-//         id: 2,
-//         name: 'style.css',
-//         type: 'file',
-//         content: 'body { background-color: red; }',
-//         saved: true,
-//     },
-//     {
-//         id: 3,
-//         name: 'js',
-//         type: 'folder',
-//         children: [
-//             {
-//                 id: 4,
-//                 name: 'script.js',
-//                 type: 'file',
-//                 content: 'console.log("Hello World")',
-//                 saved: true,
-//             },
-//             {
-//                 id: 5,
-//                 name: 'js',
-//                 type: 'folder',
-//                 children: [
-//                     {
-//                         id: 6,
-//                         name: 'script.js',
-//                         type: 'file',
-//                         content: 'console.log("Hello World")',
-//                         saved: true,
-
-//                     },
-//                     {
-//                         id: 7,
-//                         name: 'script.js',
-//                         type: 'file',
-//                         content: 'console.log("Hello World")',
-//                         saved: true,
-//                     },
-//                     {
-//                         id: 8,
-//                         name: 'utils',
-//                         type: 'folder',
-//                         children: [
-//                             {
-//                                 id: 9,
-//                                 name: 'math.js',
-//                                 type: 'file',
-//                                 content: 'export const add = (a, b) => a + b',
-//                                 saved: true,
-
-//                             },
-//                             {
-//                                 id: 10,
-//                                 name: 'string.js',
-//                                 type: 'file',
-//                                 saved: true,
-//                                 content: 'export const capitalize = (str) => str.toUpperCase()',
-//                             }
-//                         ]
-//                     }
-//                 ]
-//             }
-//         ]
-//     }
-// ]
+import EditorTerminal from './terminal';
 
 const CodeEditor = () => {
     const editorRef = useRef<null | monaco.editor.IStandaloneCodeEditor>(null);
@@ -290,11 +215,12 @@ const CodeEditor = () => {
                         </ResizablePanel>
                         <ResizableHandle />
                         <ResizablePanel defaultSize={50} minSize={20} className="p-2 flex flex-col">
-                            <div className='h-10 w-full flex gap-2 shrink-0 overflow-auto tab-scroll'>
-                                <Tab selected>Node</Tab>
+                            {/* <div className='h-10 w-full flex gap-2 shrink-0 overflow-auto tab-scroll'>
                                 <Tab>Terminal</Tab>
+                            </div> */}
+                            <div className='w-full relative grow h-full overflow-hidden rounded-lg bg-secondary'>
+                                <EditorTerminal files={serverFiles} />
                             </div>
-                            <div className='w-full relative grow h-full overflow-hidden rounded-lg bg-secondary'></div>
 
 
                         </ResizablePanel>

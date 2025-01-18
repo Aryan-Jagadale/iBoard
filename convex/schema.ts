@@ -40,7 +40,7 @@ export default defineSchema({
         v.literal("node"),
         v.literal("html-css"),
         v.literal("python"),
-
+        v.literal("html-css-js"),
       ),
       visibility: v.optional(v.union(
         v.literal("public"),

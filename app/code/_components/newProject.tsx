@@ -39,7 +39,7 @@ import { toast } from "sonner";
 import { ulid } from 'ulid';
 import {  postRequest } from "@/lib/axios";
 
-type TOptions = "react" | "node" | "python" | "more" | "html-css";
+type TOptions = "react" | "node" | "python" | "more" | "html-css" | "html-css-js";
 
 const data: {
   id: TOptions;
@@ -52,6 +52,13 @@ const data: {
     id: "html-css",
     name: "HTML/CSS",
     icon: "/icons/file_type_html.svg",
+    description: "A markup language for the web",
+    disabled: false,
+  },
+  {
+    id: "html-css-js",
+    name: "Vanilla JS",
+    icon: "/icons/file_type_js.svg",
     description: "A markup language for the web",
     disabled: false,
   },
@@ -134,7 +141,7 @@ export default function NewProjectModal({
         throw new Error("Failed to initialize VB data");
       }
       await mutate({ data: virtualboxData });
-      router.push(`/code/${virtualboxData.virtualboxId}`);
+      // router.push(`/code/${virtualboxData.virtualboxId}`);
       toast.success("SandBox created");
     } catch (error) {
       toast.error("Failed to create board");

@@ -9,23 +9,38 @@ export default function PreviewWindow({
     files,
 }: {
     type: string;
-    files: Array<any>; // Replace with a proper type for your file structure
+    files: Array<any>; 
 }) {
     const ref = useRef<HTMLIFrameElement>(null);
     const [iframeKey, setIframeKey] = useState(0);
     const [srcDoc, setSrcDoc] = useState<string>("");
     useEffect(() => {
-        const htmlFile = files.find((file) => file.name === "index.html");
-        const cssFile = files.find((file) => file.name === "style.css");
-        if (htmlFile && cssFile) {
-            const combinedHTML = htmlFile.content.replace(
-                '</head>',
-                `<style>${cssFile.content}</style></head>`
-            );
-
-            setSrcDoc(combinedHTML);
+        if (type === 'html-css' || type === 'html-css-js') {
+            const htmlFile = files.find((file) => file.name === "index.html");
+            const cssFile = files.find((file) => file.name === "style.css");
+            const jsFiles = files.filter((file) => file.name.endsWith('.js'));
+            
+            if (htmlFile && cssFile) {
+                let combinedHTML = htmlFile.content.replace(
+                    '</head>',
+                    `<style>${cssFile.content}</style></head>`
+                );
+    
+            if (jsFiles.length > 0) {
+                const scriptTags = jsFiles
+                    .map(jsFile => {
+                            const isModule = jsFile.name.endsWith('.module.js');
+                            return `<script ${isModule ? 'type="module"' : ''} 
+                                           data-filename="${jsFile.name}">
+                                    ${jsFile.content}
+                                   </script>`;}).join('\n');
+                combinedHTML = combinedHTML.replace('</body>',`${scriptTags}\n</body>`);
+            }
+    
+                setSrcDoc(combinedHTML);
+            }
         }
-    }, [files]);
+    }, [files, type]);
     
 
     
