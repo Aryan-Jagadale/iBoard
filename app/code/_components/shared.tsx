@@ -17,8 +17,7 @@ export default function DashboardSharedWithMe() {
     <div className="grow p-4 flex flex-col">
       <div className="text-xl font-medium mb-8">About projects</div>
         <div>
-          No Virtualboxes here. Get a friend to share one with you, and try out
-          live collaboration!
+          Bankkkkkkaiiii
         </div>
       
     </div>
