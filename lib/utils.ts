@@ -207,3 +207,37 @@ export function processFileType(file: string) {
   return "plaintext";
 }
 
+export const injectConsoleLogging = (html: string) => {
+        const consoleScript = `
+        <script>
+        // Override console methods to send messages to parent window
+        ['log', 'error', 'warn', 'info'].forEach(method => {
+            const originalMethod = console[method];
+            console[method] = (...args) => {
+                // Call original console method
+                originalMethod(...args);
+                
+                // Send message to parent window
+                window.parent.postMessage({
+                    type: 'console-log',
+                    level: method,
+                    args: args.map(arg => {
+                        // Handle circular references
+                        if (typeof arg === 'object') {
+                            try {
+                                return JSON.parse(JSON.stringify(arg));
+                            } catch {
+                                return arg.toString();
+                            }
+                        }
+                        return arg;
+                    })
+                }, '*');
+            };
+        });
+        </script>
+        `;
+
+        return html.replace('</body>', `${consoleScript}</body>`);
+    };
+

@@ -46,7 +46,10 @@ const CodeEditor = () => {
         });
 
         setEditorLanguage(processFileType(tab.name));
-        setActiveFile(tab.content);
+        const file = serverFiles.find((file) => file.id === tab.id);
+        if (file) {
+            setActiveFile(file.content);
+        }
         setActiveId(tab.id);
     };
 
@@ -105,11 +108,8 @@ const CodeEditor = () => {
     useEffect(() => {
         async function fetchData() {
             const editorId = window.location.pathname.split("/")[2];
-            // console.log("editorId::>",editorId);        
             const responseVB:any = await getVirualBoxRequest(`/api/getVirtualBoxData?virtualboxId=${editorId}`);
-            // console.log("responseVB::>",responseVB);
             if(!responseVB.data) return;
-
             if (responseVB.status === 200) {
                 if (responseVB.data && responseVB.data && responseVB.data.type) {
                     setServerFiles(JSON.parse(responseVB.data.virtualBoxFiles));

@@ -2,8 +2,9 @@
 
 import React, { useRef, useState, useEffect } from "react";
 import { toast } from "sonner";
-import { Link, RotateCw } from "lucide-react";
+import { Link, RotateCw,Inspect } from "lucide-react";
 import * as esbuild from "esbuild-wasm";
+import { injectConsoleLogging } from "@/lib/utils";
 
 export default function PreviewWindow({
     type,
@@ -18,12 +19,22 @@ export default function PreviewWindow({
         saved: boolean;
     }>;
 }) {
-    console.log("files", files);
     const ref = useRef<HTMLIFrameElement>(null);
     const [iframeKey, setIframeKey] = useState(0);
     const [srcDoc, setSrcDoc] = useState<string>("");
     const [esbuildInitialized, setEsbuildInitialized] = useState(false);
     const [isInitializing, setIsInitializing] = useState(false);
+
+    //Console logs
+    const [isDevToolsOpen, setIsDevToolsOpen] = useState(false);
+    const [consoleLogs, setConsoleLogs] = useState<string[]>([]);
+
+    const toggleDevTools = () => {
+        setIsDevToolsOpen(!isDevToolsOpen);
+        if (!isDevToolsOpen) {
+            setConsoleLogs([]);
+        }
+    };
 
     const initializeEsbuild = async () => {
         if (!esbuildInitialized && !isInitializing) {
@@ -165,7 +176,7 @@ export default function PreviewWindow({
             
             if (htmlFile) {
                 // Include React and ReactDOM from CDN before the bundle
-                const combinedHTML = htmlFile.content.replace(
+                const combinedHTML = injectConsoleLogging(htmlFile.content.replace(
                     "</body>",
                     `
                     <script crossorigin src="https://unpkg.com/react@18/umd/react.development.js"></script>
@@ -173,7 +184,7 @@ export default function PreviewWindow({
                     <script>${bundledCode}</script>
                     </body>
                     `
-                );
+                ));
                 setSrcDoc(combinedHTML);
             }
         } catch (error:any) {
@@ -193,6 +204,23 @@ export default function PreviewWindow({
             toast.error("Failed to run React app.");
         }
     };
+
+    useEffect(() => {
+        const handleConsoleMessage = (event: MessageEvent) => {
+            if (event.origin !== window.location.origin) return;
+            
+            if (event.data && event.data.type === 'console-log') {
+                const logEntry = `[${event.data.level}] ${event.data.args.map((arg:any) => 
+                    typeof arg === 'object' ? JSON.stringify(arg) : arg
+                ).join(' ')}`;
+                
+                setConsoleLogs(prev => [...prev, logEntry]);
+            }
+        };
+
+        window.addEventListener('message', handleConsoleMessage);
+        return () => window.removeEventListener('message', handleConsoleMessage);
+    }, []);
 
     useEffect(() => {
         if (type === "html-css" || type === "html-css-js") {
@@ -250,6 +278,11 @@ export default function PreviewWindow({
                         >
                             <RotateCw className="w-4 h-4" />
                         </PreviewButton>
+
+                        <PreviewButton onClick={toggleDevTools}>
+                            <Inspect className="w-4 h-4" />
+                        </PreviewButton>
+
                     </div>
                 </div>
             </div>
@@ -258,11 +291,24 @@ export default function PreviewWindow({
                     key={iframeKey}
                     ref={ref}
                     width="100%"
-                    height="100%"
+                    height={isDevToolsOpen ? "70%" : "100%"}
                     srcDoc={srcDoc || "<h1>Loading...</h1>"}
                     sandbox="allow-scripts allow-same-origin allow-forms"
                 />
             </div>
+            {isDevToolsOpen && (
+                    <div className="w-full h-[30%] bg-black text-white p-2 overflow-auto">
+                        <div className="font-bold mb-2">Console Logs</div>
+                        {consoleLogs.map((log, index) => (
+                            <div 
+                                key={index} 
+                                className="text-xs font-mono whitespace-pre-wrap"
+                            >
+                                {log}
+                            </div>
+                        ))}
+                    </div>
+                )}
         </>
     );
 }
