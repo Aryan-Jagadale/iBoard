@@ -52,6 +52,7 @@
     "react-lottie-player": "^2.0.0",
     "react-modern-drawer": "^1.2.2",
     "react-resizable-panels": "^2.1.7",
+    "socket.io-client": "^4.8.1",
     "sonner": "^1.4.3",
     "tailwind-merge": "^2.2.1",
     "tailwindcss-animate": "^1.0.7",

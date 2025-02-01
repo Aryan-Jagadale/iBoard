@@ -14,6 +14,8 @@ import { processFileType } from '@/lib/utils';
 import PreviewWindow from './preview-window';
 import { getVirualBoxRequest } from '@/lib/axios';
 import EditorTerminal from './terminal';
+import { io, Socket } from "socket.io-client";
+import { useDebounce } from '@/hooks/useDebounce';
 
 const CodeEditor = () => {
     const editorRef = useRef<null | monaco.editor.IStandaloneCodeEditor>(null);
@@ -26,7 +28,10 @@ const CodeEditor = () => {
     const [activeId, setActiveId] = useState<string>("");
     const [tabs, setTabs] = useState<any[]>([]);
     const [serverFiles, setServerFiles] = useState<any[]>([]);
-    const [serverFileType, setServerFileType] = useState("")
+    const [serverFileType, setServerFileType] = useState("");
+    const [servervboxId, setServerVboxId] = useState("");
+    const [serverS3path, setServerS3path] = useState<any[]>([]);
+    const socketRef = useRef<Socket | null>(null);
 
     const clerk = useClerk();
 
@@ -77,22 +82,42 @@ const CodeEditor = () => {
         }
     };
 
-    const updateFileContent = (id: string, newContent: string, folder = serverFiles): any[] => {
-        return folder.map(( fileOrFolder:any )  => {
-                if (fileOrFolder.id === id) {
-                    return { ...fileOrFolder, content: newContent, saved: false };
-                }
-                if (fileOrFolder.type === "folder") {
-                    return { ...fileOrFolder, children: updateFileContent(id, newContent, fileOrFolder.children) };
-                }
-                return fileOrFolder;
-            });
-        };
+    // const updateFileContent = (id: string, newContent: string, folder = serverFiles): any[] => {
+    //     return folder.map(( fileOrFolder:any )  => {
+    //             if (fileOrFolder.id === id) {
+    //                 return { ...fileOrFolder, content: newContent, saved: false };
+    //             }
+    //             if (fileOrFolder.type === "folder") {
+    //                 return { ...fileOrFolder, children: updateFileContent(id, newContent, fileOrFolder.children) };
+    //             }
+    //             return fileOrFolder;
+    //         });
+    // };
+
+    const debouncedFileUpdate = useDebounce((fileId: string, content: string,virtualboxId:string,bucketPath:string) => {
+        socketRef.current?.emit("fileUpdate", {
+            fileId,
+            content,
+            virtualboxId,
+            bucketPath
+        });
+    }, { delay: 4000 });
 
     const handleEditorChange = (value: string | undefined) => {
         if (activeId && value !== undefined) {
-            const updatedFiles:any[] = updateFileContent(activeId, value);
-            setServerFiles(updatedFiles);
+            const bucketPath = serverS3path.find((file) => file._id === activeId)?.s3Path;
+            debouncedFileUpdate(activeId, value, servervboxId,bucketPath);
+            // Resposne from websocket
+            socketRef.current?.on("fileUpdatedBroadcast", (data) => {
+                const updatedFiles:any[] = serverFiles.map((fileOrFolder:any) => {
+                    if (fileOrFolder.id === data.fileId) {
+                        return { ...fileOrFolder, content: data.content, saved: true };
+                    }
+                    return fileOrFolder;
+                });
+                console.log("updatedFiles::>",updatedFiles);
+                setServerFiles(updatedFiles);
+            });
         }
     };
 
@@ -103,7 +128,20 @@ const CodeEditor = () => {
             command: "null",
           },
         ]);
-      };
+    };
+
+    useEffect(() => {
+        socketRef.current = io(process.env.NEXT_PUBLIC_SOCKET_URL || "http://localhost:4001");
+        socketRef.current.on("connect", () => {
+          console.log("WebSocket connected:", socketRef.current?.id);
+        });
+        socketRef.current.on("disconnect", () => {
+          console.log("WebSocket disconnected");
+        });
+        return () => {
+          socketRef.current?.disconnect();
+        };
+    }, []);
 
     useEffect(() => {
         async function fetchData() {
@@ -114,6 +152,8 @@ const CodeEditor = () => {
                 if (responseVB.data && responseVB.data && responseVB.data.type) {
                     setServerFiles(JSON.parse(responseVB.data.virtualBoxFiles));
                     setServerFileType(responseVB.data.type)
+                    setServerVboxId(responseVB.data.virtualboxId)
+                    setServerS3path(responseVB.data.filess3Path)
                 } 
             }
         }
@@ -144,7 +184,7 @@ const CodeEditor = () => {
                         {tabs.map((tab) => (
                             <Tab
                                 key={tab.id}
-                                saved={tab.saved ?? false}
+                                saved={true}
                                 onClick={() => selectFile(tab)}
                                 selected={activeId === tab.id}
                                 onClose={() => closeTab(tab.id)}
