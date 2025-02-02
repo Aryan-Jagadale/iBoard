@@ -94,20 +94,20 @@ const CodeEditor = () => {
     //         });
     // };
 
-    const debouncedFileUpdate = useDebounce((fileId: string, content: string,virtualboxId:string,bucketPath:string) => {
+    const debouncedFileUpdate = useDebounce((fileId: string, content: string,virtualboxId:string,bucketPath:string,fileName:string) => {
         socketRef.current?.emit("fileUpdate", {
             fileId,
             content,
             virtualboxId,
-            bucketPath
+            bucketPath,
+            fileName
         });
     }, { delay: 4000 });
 
     const handleEditorChange = (value: string | undefined) => {
         if (activeId && value !== undefined) {
-            const bucketPath = serverS3path.find((file) => file._id === activeId)?.s3Path;
-            debouncedFileUpdate(activeId, value, servervboxId,bucketPath);
-            // Resposne from websocket
+            const {bucketPath,name} = serverFiles.find((file) => file.id === activeId);
+            debouncedFileUpdate(activeId, value, servervboxId,bucketPath,name);
             socketRef.current?.on("fileUpdatedBroadcast", (data) => {
                 const updatedFiles:any[] = serverFiles.map((fileOrFolder:any) => {
                     if (fileOrFolder.id === data.fileId) {
@@ -150,7 +150,14 @@ const CodeEditor = () => {
             if(!responseVB.data) return;
             if (responseVB.status === 200) {
                 if (responseVB.data && responseVB.data && responseVB.data.type) {
-                    setServerFiles(JSON.parse(responseVB.data.virtualBoxFiles));
+                    // setServerFiles(JSON.parse(responseVB.data.virtualBoxFiles));
+                    socketRef.current?.emit("initializeFiles", {
+                        virtualboxId: responseVB.data.virtualboxId,
+                        files: JSON.parse(responseVB.data.virtualBoxFiles),
+                    });
+                    socketRef.current?.on("virtualBoxInitialized", (data) => {
+                        setServerFiles(data?.files);
+                    })
                     setServerFileType(responseVB.data.type)
                     setServerVboxId(responseVB.data.virtualboxId)
                     setServerS3path(responseVB.data.filess3Path)
