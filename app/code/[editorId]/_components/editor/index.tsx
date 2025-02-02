@@ -169,7 +169,7 @@ const CodeEditor = () => {
                     defaultSize={15}
                     className="flex flex-col p-2"
                 >
-                    <Sidebar data={serverFiles} selectFile={selectFile} activeId={activeId}/>
+                    <Sidebar data={serverFiles} setData={setServerFiles} socketRef={socketRef} servervboxId={servervboxId} selectFile={selectFile} activeId={activeId}/>
 
                 </ResizablePanel>
                 <ResizableHandle />

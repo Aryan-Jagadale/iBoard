@@ -133,8 +133,8 @@ const FileTreeNode = ({ node, level = 0, onDelete, onRename, onAddFile, onAddFol
   );
 };
 
-const FileExplorer = ({ data,selectFile,activeId }: any) => {
-  const [fileTree, setFileTree] = useState<any[]>([]);
+const FileExplorer = ({ data,setData,servervboxId,socketRef,selectFile,activeId }: any) => {
+  // const [fileTree, setFileTree] = useState<any[]>([]);
   const [newItemName, setNewItemName] = useState("");
   const [dialogType, setDialogType] = useState<"file" | "folder" | null>(null);
 
@@ -151,7 +151,7 @@ const FileExplorer = ({ data,selectFile,activeId }: any) => {
       }, []);
     };
 
-    setFileTree(deleteNodeRecursive(fileTree));
+    setData(deleteNodeRecursive(data));
   };
 
   const renameNode = (nodeId: string, newName: string) => {
@@ -167,7 +167,7 @@ const FileExplorer = ({ data,selectFile,activeId }: any) => {
       });
     };
 
-    setFileTree(renameNodeRecursive(fileTree));
+    setData(renameNodeRecursive(data));
   };
 
   const addNode = (parentId: string | null, newNode: any) => {
@@ -186,16 +186,26 @@ const FileExplorer = ({ data,selectFile,activeId }: any) => {
       });
     };
 
-    setFileTree(parentId ? addNodeRecursive(fileTree) : [...fileTree, newNode]);
+    setData(parentId ? addNodeRecursive(data) : [...data, newNode]);
   };
 
   const handleAddFile = (parentId: string | null, fileName: string) => {
     const newFile = {
-      id: Date.now().toString(),
       name: fileName,
-      type: 'file'
+      type: 'file',
+      saved:true,
+      content:''
     };
-    addNode(parentId, newFile);
+    const socketData = {
+      fileName,
+      virtualboxId:servervboxId,
+      bucketPath:`virtualbox/${servervboxId}/${fileName}`,
+      folderId:null
+    }
+    socketRef.current.emit('fileCreate',socketData);
+    socketRef.current.on('fileCreatedBroadcast', (data: any) => {
+      addNode(null, data);
+    });
   };
 
   const handleAddFolder = (parentId: string | null, folderName: string) => {
@@ -224,9 +234,13 @@ const FileExplorer = ({ data,selectFile,activeId }: any) => {
   };
 
   useEffect(() => {
-    setFileTree(data);
-  }, [data]);
-
+    const socket = socketRef.current;
+    return () => {
+      if (socket) {
+        socket.off('fileCreatedBroadcast'); 
+      }
+    }
+  },[socketRef])
   return (
     <div className="px-2 rounded shadow">
       <div className="my-3 space-x-2 cursor-pointer flex items-center justify-end gap-1">
@@ -248,7 +262,7 @@ const FileExplorer = ({ data,selectFile,activeId }: any) => {
       </div>
 
       <div>
-        {fileTree
+        {data
           .sort((a: any, b: any) => {
             if (a.type === b.type) return a.name.localeCompare(b.name);
             return a.type === 'file' ? -1 : 1;
