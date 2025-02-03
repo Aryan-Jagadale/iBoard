@@ -120,7 +120,7 @@ const FileTreeNode = ({ node, level = 0, onDelete, onRename, onAddFile, onAddFol
         </div>
       </ContextMenuTrigger>
       <ContextMenuContent>
-        <ContextMenuItem onClick={handleRename}>Rename</ContextMenuItem>
+        <ContextMenuItem disabled onClick={handleRename}>Rename</ContextMenuItem>
         {node.type === 'folder' && (
           <>
             <ContextMenuItem onClick={handleAddFile}>New File</ContextMenuItem>
@@ -139,19 +139,27 @@ const FileExplorer = ({ data,setData,servervboxId,socketRef,selectFile,activeId 
   const [dialogType, setDialogType] = useState<"file" | "folder" | null>(null);
 
   const deleteNode = (nodeId: string) => {
-    const deleteNodeRecursive = (nodes: any[]): any[] => {
+    const deleteNodeRecursive = (nodes: any[],nodeId:string): any[] => {
       return nodes.reduce((acc: any[], node: any) => {
         if (node.id === nodeId) {
           return acc; 
         }
         if (node.type === 'folder' && node.children) {
-          return [...acc, { ...node, children: deleteNodeRecursive(node.children) }];
+          return [...acc, { ...node, children: deleteNodeRecursive(node.children,nodeId) }];
         }
         return [...acc, node];
       }, []);
     };
+    const socketData = {
+      virtualboxId:servervboxId,
+      bucketPath:`virtualbox/${servervboxId}`,
+      fileId:nodeId
+    }
+    socketRef.current.emit('fileDelete',socketData);
+    socketRef.current.on('fileDeletedBroadcast', (resp: any) => {
+      setData(deleteNodeRecursive(data,resp?.fileId));
+    });
 
-    setData(deleteNodeRecursive(data));
   };
 
   const renameNode = (nodeId: string, newName: string) => {
@@ -237,7 +245,7 @@ const FileExplorer = ({ data,setData,servervboxId,socketRef,selectFile,activeId 
     const socket = socketRef.current;
     return () => {
       if (socket) {
-        socket.off('fileCreatedBroadcast'); 
+        socket.off('fileCreatedBroadcast');
       }
     }
   },[socketRef])
