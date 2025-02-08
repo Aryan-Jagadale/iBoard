@@ -102,7 +102,7 @@ const CodeEditor = () => {
             bucketPath,
             fileName
         });
-    }, { delay: 4000 });
+    }, { delay: 10000 });
 
     const handleEditorChange = (value: string | undefined) => {
         if (activeId && value !== undefined) {
