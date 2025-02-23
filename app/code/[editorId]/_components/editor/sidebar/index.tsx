@@ -18,7 +18,7 @@ import {
 const FileTreeNode = ({ node, level = 0, onDelete, onRename, onAddFile, onAddFolder,onClickFile,activeId }: { 
   node: any; 
   level?: number; 
-  onDelete: (nodeId: string) => void; 
+  onDelete: (nodeId: string,nodeName:string) => void; 
   onRename: (nodeId: string, newName: string) => void;
   onAddFile: (nodeId: string, fileName: string) => void;
   onAddFolder: (nodeId: string, folderName: string) => void;
@@ -36,7 +36,9 @@ const FileTreeNode = ({ node, level = 0, onDelete, onRename, onAddFile, onAddFol
 
   const handleDelete = (e: React.MouseEvent) => {
     e.stopPropagation();
-    onDelete(node.id);
+    console.log("Delete",node.id);
+    console.log("Delete",node.name);
+    onDelete(node.id,node.name);
   };
 
   const handleRename = (e: React.MouseEvent) => {
@@ -138,7 +140,7 @@ const FileExplorer = ({ data,setData,servervboxId,socketRef,selectFile,activeId 
   const [newItemName, setNewItemName] = useState("");
   const [dialogType, setDialogType] = useState<"file" | "folder" | null>(null);
 
-  const deleteNode = (nodeId: string) => {
+  const deleteNode = (nodeId: string,fileName:string) => {
     const deleteNodeRecursive = (nodes: any[],nodeId:string): any[] => {
       return nodes.reduce((acc: any[], node: any) => {
         if (node.id === nodeId) {
@@ -152,7 +154,7 @@ const FileExplorer = ({ data,setData,servervboxId,socketRef,selectFile,activeId 
     };
     const socketData = {
       virtualboxId:servervboxId,
-      bucketPath:`virtualbox/${servervboxId}`,
+      bucketPath:`virtualbox/${servervboxId}/${fileName}`,
       fileId:nodeId
     }
     socketRef.current.emit('fileDelete',socketData);
