@@ -19,6 +19,8 @@ export default function PreviewWindow({
         saved: boolean;
     }>;
 }) {
+    console.log("files",files);
+    
     const ref = useRef<HTMLIFrameElement>(null);
     const [iframeKey, setIframeKey] = useState(0);
     const [srcDoc, setSrcDoc] = useState<string>("");
@@ -68,23 +70,23 @@ export default function PreviewWindow({
             toast.error("esbuild is not initialized yet");
             return;
         }
-
+    
         try {
             const entryFile = files.find((file) => file.name === "main.jsx");
             if (!entryFile) {
                 toast.error("main.jsx file is missing.");
                 return;
             }
-
+    
             const fileMap = files.reduce((acc, file) => {
                 // Store files both with and without extension for flexible resolution
                 const nameWithoutExt = file.name.replace(/\.[^/.]+$/, "");
                 acc[file.name] = file.content;
                 acc[nameWithoutExt] = file.content;
+                acc[`/${file.name}`] = file.content; 
                 return acc;
             }, {} as Record<string, string>);
-            // console.log("fileMap", fileMap);
-
+    
             // Build the bundle
             const result = await esbuild.build({
                 stdin: {
@@ -109,7 +111,16 @@ export default function PreviewWindow({
                             build.onResolve({ filter: /^react(-dom)?$/ }, (args) => {
                                 return { path: args.path, namespace: 'external-import' };
                             });
-
+    
+                            // Handle CSS imports
+                            build.onResolve({ filter: /\.css$/ }, (args) => {
+                                const importPath = args.path.startsWith('/') ? args.path.slice(1) : args.path;
+                                return {
+                                    path: importPath,
+                                    namespace: 'style-handling'
+                                };
+                            });
+    
                             // Handle relative imports
                             build.onResolve({ filter: /^\.+\// }, (args) => {
                                 const importPath = args.path.replace(/^\.\//, '');
@@ -122,25 +133,19 @@ export default function PreviewWindow({
                                     `${importPath}/index.jsx`,
                                     `${importPath}/index.js`
                                 ];
-
-
-                                const existingPath = possiblePaths.find((path) => {
-                                    if (path === 'App') {
-                                        return 'App.jsx'
-                                    }
-                                    return fileMap[path];
-                                });
+    
+                                const existingPath = possiblePaths.find(path => fileMap[path]);
                                 
                                 if (!existingPath) {
                                     throw new Error(`Could not resolve ${args.path}. Tried: ${possiblePaths.join(', ')}`);
                                 }
-
+    
                                 return {
                                     path: existingPath,
                                     namespace: 'local-file'
                                 };
                             });
-
+    
                             // Load files from our virtual file system
                             build.onLoad({ filter: /.*/, namespace: 'local-file' }, (args) => {
                                 const content = fileMap[args.path];
@@ -148,10 +153,29 @@ export default function PreviewWindow({
                                     throw new Error(`Could not find file ${args.path}`);
                                 }                       
                                 const loader = args.path.endsWith('.jsx') ? 'jsx' : 'jsx';
-                                // const loader = 'jsx';                            
                                 return { contents: content, loader };
                             });
-
+    
+                            // Handle CSS files
+                            build.onLoad({ filter: /.*/, namespace: 'style-handling' }, (args) => {
+                                const content = fileMap[args.path];
+                                if (!content) {
+                                    throw new Error(`Could not find CSS file ${args.path}`);
+                                }
+                                
+                                // Convert CSS into a JavaScript module that injects styles
+                                const jsContent = `
+                                    const style = document.createElement('style');
+                                    style.textContent = ${JSON.stringify(content)};
+                                    document.head.appendChild(style);
+                                `;
+                                
+                                return {
+                                    contents: jsContent,
+                                    loader: 'js'
+                                };
+                            });
+    
                             // Handle external imports
                             build.onLoad({ filter: /.*/, namespace: 'external-import' }, (args) => {
                                 if (args.path === 'react') {
@@ -170,12 +194,11 @@ export default function PreviewWindow({
                         },
                     },
                 ],
-            });   
+            });
             const bundledCode = result.outputFiles[0].text;
             const htmlFile = files.find((file) => file.name === "index.html");
             
             if (htmlFile) {
-                // Include React and ReactDOM from CDN before the bundle
                 const combinedHTML = injectConsoleLogging(htmlFile.content.replace(
                     "</body>",
                     `
@@ -187,9 +210,8 @@ export default function PreviewWindow({
                 ));
                 setSrcDoc(combinedHTML);
             }
-        } catch (error:any) {
+        } catch (error) {
             console.error("Error bundling React files:", error);
-            toast.error("Failed to bundle React files: " + error.message);
         }
     };
 

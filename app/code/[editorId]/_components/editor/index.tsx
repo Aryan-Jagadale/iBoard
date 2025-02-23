@@ -279,14 +279,9 @@ const CodeEditor = () => {
                         </ResizablePanel>
                         <ResizableHandle />
                         <ResizablePanel defaultSize={50} minSize={20} className="p-2 flex flex-col">
-                            {/* <div className='h-10 w-full flex gap-2 shrink-0 overflow-auto tab-scroll'>
-                                <Tab>Terminal</Tab>
-                            </div> */}
                             <div className='w-full relative grow h-full overflow-hidden rounded-lg bg-secondary'>
                                 <EditorTerminal files={serverFiles} />
                             </div>
-
-
                         </ResizablePanel>
 
                     </ResizablePanelGroup>

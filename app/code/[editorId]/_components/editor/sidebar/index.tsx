@@ -14,6 +14,7 @@ import {
   ContextMenuItem,
   ContextMenuTrigger,
 } from "@/components/ui/context-menu"
+import PackageManager from './package-manager';
 
 const FileTreeNode = ({ node, level = 0, onDelete, onRename, onAddFile, onAddFolder,onClickFile,activeId }: { 
   node: any; 
@@ -290,6 +291,10 @@ const FileExplorer = ({ data,setData,servervboxId,socketRef,selectFile,activeId 
               activeId={activeId}
             />
           ))}
+      </div>
+
+      <div>
+        <PackageManager/>
       </div>
 
       <Dialog open={dialogType !== null} onOpenChange={() => setDialogType(null)}>
