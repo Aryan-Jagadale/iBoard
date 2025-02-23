@@ -16,6 +16,7 @@ import { getVirualBoxRequest } from '@/lib/axios';
 import EditorTerminal from './terminal';
 import { io, Socket } from "socket.io-client";
 import { useDebounce } from '@/hooks/useDebounce';
+import { draculaTheme } from '@/lib/dracula-theme';
 
 const CodeEditor = () => {
     const editorRef = useRef<null | monaco.editor.IStandaloneCodeEditor>(null);
@@ -122,6 +123,7 @@ const CodeEditor = () => {
     };
 
     const handleEditorWillMount: BeforeMount = (monaco) => {
+        monaco.editor.defineTheme('dracula', draculaTheme);
         monaco.editor.addKeybindingRules([
           {
             keybinding: monaco.KeyMod.CtrlCmd | monaco.KeyCode.KeyG,
@@ -210,7 +212,7 @@ const CodeEditor = () => {
                                 <Editor
                                     height={"100vh"}
                                     defaultLanguage="typescript"
-                                    theme="vs-dark"
+                                    theme="dracula"
                                     onMount={handleEditorMount}
                                     beforeMount={handleEditorWillMount}
                                     onChange={(value) => {
@@ -240,6 +242,21 @@ const CodeEditor = () => {
                                         scrollBeyondLastLine: false,
                                         fixedOverflowWidgets: true,
                                         fontFamily: "var(--font-geist-mono)",
+                                        fontSize: 12,
+                                        lineHeight: 1.6,
+                                        letterSpacing: 0.4,
+                                        fontLigatures: true,
+                                        fontWeight: '400',
+                                        renderWhitespace: 'none',
+                                        cursorWidth: 2,
+                                        cursorBlinking: 'smooth',
+                                        smoothScrolling: true,
+                                        contextmenu: true,
+                                        mouseWheelScrollSensitivity: 1.5,
+                                        wordWrap: 'on',
+                                        lineNumbers: 'on',
+                                        glyphMargin: false,
+                                        renderLineHighlight: 'line',
                                     }}
                                     language={editorLanguage}
                                     value={activeFile ?? ""}

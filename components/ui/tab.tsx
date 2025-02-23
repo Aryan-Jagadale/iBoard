@@ -24,7 +24,7 @@ export default function Tab({
       variant={"secondary"}
       className={`font-normal select-none rounded-none ${
         selected
-          ? "bg-[#1e1e1e] hover:bg-neutral-600 text-foreground"
+          ? "bg-[#282A36] hover:bg-neutral-600 text-foreground"
           : "text-muted-foreground "
       }`}
     >

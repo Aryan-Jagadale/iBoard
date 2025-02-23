@@ -260,12 +260,13 @@ const FileExplorer = ({ data,setData,servervboxId,socketRef,selectFile,activeId 
           </div>
         </Hint>
         <Hint label={'Add folder'} side="top" align="center" sideOffset={0} alignOffset={0}>
-          <div onClick={() => setDialogType("folder")}>
-            <FolderPlus size={17} color='grey' />
+          {/* <div onClick={() => setDialogType("folder")}> */}
+          <div onClick={()=>alert("Development in progress !")}>
+            <FolderPlus className='' size={17} color='grey' />
           </div>
         </Hint>
         <Hint label={'Close all folders'} side="top" align="center" sideOffset={0} alignOffset={0}>
-          <div>
+          <div onClick={()=>alert("Development in progress !")}>
             <CopyMinus size={16} color='grey' />
           </div>
         </Hint>
