@@ -1,60 +1,113 @@
 'use client'
-
-
-
 import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Drawer, DrawerContent, DrawerHeader, DrawerTitle, DrawerTrigger } from "@/components/ui/drawer"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
-import { fetchPackageCdn } from "@/lib/packageFetcher"
+import { fetchPackageCdn, updatePackageJson,removeDependencyFromPackageJson, fetchPackages } from "@/lib/packageFetcher"
+import { useDebounce } from "@/hooks/useDebounce"
+import { Trash2 } from "lucide-react"
 
-const fetchPackages = async (search: string) => {
-    const response:any = await fetchPackageCdn(search)
-    return [
-        { name: response.packageName, version: response.version }
-    ]
-}
-
-export default function PackageManager() {
+export default function PackageManager({ servervboxId,socketRef, newPackages, setNewPackages, serverFiles, setServerFiles }: any) {
     const [isOpen, setIsOpen] = useState(false)
-    const [packages, setPackages] = useState<Array<{ name: string; version: string }>>([{ name: "react", version: "18.0.2" },
-    { name: "react-dom", version: "18.0.2" }])
-    const [newPackage, setNewPackage] = useState({ name: "", version: "" })
-    const [suggestions, setSuggestions] = useState<Array<{ name: string; version: string }>>([])
+    const [packages, setPackages] = useState<Array<{ name: string; version: string,main:string }>>([{ name: "react", version: "18.0.2",main:"react.development.js" },
+    { name: "react-dom", version: "18.0.2",main:"react-dom.development.js" }])
+    const [newPackage, setNewPackage] = useState({ name: "", version: "", main: "" })
+    const [suggestions, setSuggestions] = useState<Array<{ name: string; version: string; main: string; }>>([])
     const [showInputs, setShowInputs] = useState(false)
 
+    const debouncedFetchSuggestions = useDebounce(async () => {
+        if (newPackage.name.length > 2) {
+            const results = await fetchPackages(newPackage.name);
+            setSuggestions(results);
+        } else {
+            setSuggestions([]);
+        }}, { delay: 500 });
+
+    const debouncedFileUpdate = useDebounce((fileId: string, content: string, virtualboxId: string, bucketPath: string, fileName: string) => {
+        socketRef.current?.emit("fileUpdate", {
+            fileId,
+            content,
+            virtualboxId,
+            bucketPath,
+            fileName
+        });
+    }, { delay: 10000 });
+
     useEffect(() => {
-        const fetchSuggestions = async () => {
-            if (newPackage.name.length > 2) {
-                const results = await fetchPackages(newPackage.name)
-                setSuggestions(results)
-            } else {
-                setSuggestions([])
-            }
-        }
-        fetchSuggestions()
-    }, [newPackage.name])
+        debouncedFetchSuggestions();
+    }, [newPackage.name]);
 
     const handleAddPackage = () => {
         if (newPackage.name && newPackage.version) {
+            const updatedPackages = [...newPackages, { name: newPackage.name, version: newPackage.version, main: newPackage.main }];
             setPackages([...packages, newPackage])
-            setNewPackage({ name: "", version: "" })
+            setNewPackage({ name: "", version: "", main: "" })
             setShowInputs(false)
+            setNewPackages([...newPackages, { name: newPackage.name, version: newPackage.version, main: newPackage.main }])
+            const packageJsonContent = JSON.stringify({
+                dependencies: Object.fromEntries(updatedPackages.map(pkg => [pkg.name, pkg.version]))
+            }, null, 2);
+            const packageJsonFile = serverFiles.find((file: any) => file.name === "package.json");
+            const updatedPkgJson = updatePackageJson(packageJsonFile, JSON.parse(packageJsonContent));
+            const vbId = servervboxId;
+            debouncedFileUpdate(updatedPkgJson.fileId, updatedPkgJson.content, vbId, updatedPkgJson.bucketPath, updatedPkgJson.name);
+            socketRef.current?.on("fileUpdatedBroadcast", (data: any) => {
+                const updatedFiles: any[] = serverFiles.map((fileOrFolder: any) => {
+                    if (fileOrFolder.id === data.fileId) {
+                        return { ...fileOrFolder, content: data.content, saved: true };
+                    }
+                    return fileOrFolder;
+                });
+                setServerFiles(updatedFiles);
+            });
         }
+    }
+
+    const handleDeletePackage = (packageName: string) => {
+        if (packageName === "react" || packageName === "react-dom") return
+        const updatedPackages = packages.filter((pkg) => pkg.name !== packageName)
+        const updatedNewPackages = newPackages.filter((pkg: any) => pkg.name !== packageName)
+    
+        setPackages(updatedPackages)
+        setNewPackages(updatedNewPackages)
+
+        const packageJsonFile = serverFiles.find((file: any) => file.name === "package.json");
+        const updatedPkgJson = removeDependencyFromPackageJson(packageJsonFile, packageName);
+        const vbId = servervboxId;
+        debouncedFileUpdate(updatedPkgJson.fileId, updatedPkgJson.content, vbId, updatedPkgJson.bucketPath, updatedPkgJson.name);
+        socketRef.current?.on("fileUpdatedBroadcast", (data: any) => {
+            const updatedFiles: any[] = serverFiles.map((fileOrFolder: any) => {
+                if (fileOrFolder.id === data.fileId) {
+                    return { ...fileOrFolder, content: data.content, saved: true };
+                }
+                return fileOrFolder;
+            });
+            setServerFiles(updatedFiles);
+        });
     }
 
     const toggleInputs = () => {
         setShowInputs(!showInputs)
-        setNewPackage({ name: "", version: "" })
+        setNewPackage({ name: "", version: "", main: "" })
         setSuggestions([])
     }
+
+    useEffect(() => {
+        const packageJsonFile = serverFiles.find((file: any) => file.name === "package.json");
+        if (packageJsonFile) {
+            const packageJson = JSON.parse(packageJsonFile.content);
+            const dependencies = packageJson.dependencies;
+            const packages = Object.keys(dependencies).map((key) => ({ name: key, version: dependencies[key], main: "" }));
+            setPackages(packages);
+        }
+    },[serverFiles])
 
     return (
         <div className="p-4">
             <Drawer open={isOpen} onOpenChange={setIsOpen}>
                 <DrawerTrigger asChild>
-                    <Button>Open Package Manager</Button>
+                    <Button>Add npm Packages</Button>
                 </DrawerTrigger>
                 <DrawerContent>
                     <DrawerHeader>
@@ -73,6 +126,19 @@ export default function PackageManager() {
                                     <TableRow key={index}>
                                         <TableCell>{pkg.name}</TableCell>
                                         <TableCell>{pkg.version}</TableCell>
+                                        <TableCell>
+                                            {pkg.name !== "react" && pkg.name !== "react-dom" && (
+                                                <Button
+                                                    variant="ghost"
+                                                    size="icon"
+                                                    onClick={() => handleDeletePackage(pkg.name)}
+                                                    className="h-8 w-8 text-destructive hover:text-destructive/90 hover:bg-destructive/10"
+                                                >
+                                                    <Trash2 className="h-4 w-4" />
+                                                    <span className="sr-only">Delete {pkg.name}</span>
+                                                </Button>
+                                            )}
+                                        </TableCell>
                                     </TableRow>
                                 ))}
                             </TableBody>
@@ -93,7 +159,7 @@ export default function PackageManager() {
                                                     <li
                                                         key={index}
                                                         className="px-3 py-2 hover:bg-muted cursor-pointer"
-                                                        onClick={() => setNewPackage(suggestion)}
+                                                        onClick={() => { setNewPackage(suggestion); setSuggestions([]) }}
                                                     >
                                                         {suggestion.name} ({suggestion.version})
                                                     </li>
@@ -122,7 +188,6 @@ export default function PackageManager() {
                                         Add package.json
                                     </Button>
                                 </div>
-
                             )
                         }
                     </div>

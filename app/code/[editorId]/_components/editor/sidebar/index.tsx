@@ -136,7 +136,7 @@ const FileTreeNode = ({ node, level = 0, onDelete, onRename, onAddFile, onAddFol
   );
 };
 
-const FileExplorer = ({ data,setData,servervboxId,socketRef,selectFile,activeId }: any) => {
+const FileExplorer = ({serverFileType, newPackages,setNewPackages,data,setData,servervboxId,socketRef,selectFile,activeId }: any) => {
   // const [fileTree, setFileTree] = useState<any[]>([]);
   const [newItemName, setNewItemName] = useState("");
   const [dialogType, setDialogType] = useState<"file" | "folder" | null>(null);
@@ -293,9 +293,13 @@ const FileExplorer = ({ data,setData,servervboxId,socketRef,selectFile,activeId 
           ))}
       </div>
 
-      <div>
-        <PackageManager/>
-      </div>
+      {
+        serverFileType === 'react' && (
+          <div>
+          <PackageManager servervboxId={servervboxId} socketRef={socketRef} newPackages={newPackages} setNewPackages={setNewPackages} serverFiles={data} setServerFiles={setData}/>
+        </div>
+        )
+      }
 
       <Dialog open={dialogType !== null} onOpenChange={() => setDialogType(null)}>
         <DialogContent>

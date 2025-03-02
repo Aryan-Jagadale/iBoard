@@ -33,6 +33,7 @@ const CodeEditor = () => {
     const [servervboxId, setServerVboxId] = useState("");
     const [serverS3path, setServerS3path] = useState<any[]>([]);
     const socketRef = useRef<Socket | null>(null);
+    const [newPackages, setNewPackages] = useState([]);
 
     const clerk = useClerk();
 
@@ -83,17 +84,6 @@ const CodeEditor = () => {
         }
     };
 
-    // const updateFileContent = (id: string, newContent: string, folder = serverFiles): any[] => {
-    //     return folder.map(( fileOrFolder:any )  => {
-    //             if (fileOrFolder.id === id) {
-    //                 return { ...fileOrFolder, content: newContent, saved: false };
-    //             }
-    //             if (fileOrFolder.type === "folder") {
-    //                 return { ...fileOrFolder, children: updateFileContent(id, newContent, fileOrFolder.children) };
-    //             }
-    //             return fileOrFolder;
-    //         });
-    // };
 
     const debouncedFileUpdate = useDebounce((fileId: string, content: string,virtualboxId:string,bucketPath:string,fileName:string) => {
         socketRef.current?.emit("fileUpdate", {
@@ -178,7 +168,7 @@ const CodeEditor = () => {
                     defaultSize={15}
                     className="flex flex-col p-2"
                 >
-                    <Sidebar data={serverFiles} setData={setServerFiles} socketRef={socketRef} servervboxId={servervboxId} selectFile={selectFile} activeId={activeId}/>
+                    <Sidebar serverFileType={serverFileType} newPackages={newPackages} setNewPackages={setNewPackages}  data={serverFiles} setData={setServerFiles} socketRef={socketRef} servervboxId={servervboxId} selectFile={selectFile} activeId={activeId}/>
 
                 </ResizablePanel>
                 <ResizableHandle />
@@ -275,6 +265,7 @@ const CodeEditor = () => {
                         <PreviewWindow
                             type={serverFileType}
                             files={serverFiles}
+                            newPackages={newPackages}
                         />
                         </ResizablePanel>
                         <ResizableHandle />

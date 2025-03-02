@@ -1,36 +1,76 @@
-import { cache } from 'react'
-
-export const fetchPackageCdn = cache(async (packageName: string) => {
+export const fetchPackageCdn = async (packageName: string) => {
   try {
-    // Fetch the actual CDN content
-    const response = await fetch(`https://esm.sh/${packageName}`, {
-      headers: {
-        'Accept': 'text/plain' 
-      }
-    })
-
+    const response = await fetch(`https://unpkg.com/${packageName}/package.json`);
     if (!response.ok) {
-      throw new Error(`Failed to fetch CDN content: ${response.statusText}`)
+      return { exists: false, version: null };
     }
-
-    // Get the CDN content as text
-    const cdnContent = await response.text()
-    return extractPackageInfo(cdnContent)
+    const packageInfo = await response.json();
+    if (packageInfo.version && packageInfo.main) {
+      return { 
+        exists: true, 
+        version: packageInfo.version,
+        packageName: packageInfo?.name || packageName, 
+        main: packageInfo.main,
+      };
+    }
+    return { exists: false, version: null };
+    
   } catch (error) {
-    console.error('Error fetching CDN content:', error)
-    throw error
+    console.error(`Error verifying package ${packageName}:`, error);
+    return { exists: false, version: null };
   }
-})
+}
 
-
-function extractPackageInfo(cdnContent: string) {
-    // Look for the pattern /* esm.sh - package-name@version */
-    const firstLineMatch = cdnContent.match(/\/\* esm\.sh - ([^@]+)@([\d.]+) \*\//);
-    if (!firstLineMatch) {
-      return null;
+export const fetchPackages = async (search: string) => {
+    const response: any = await fetchPackageCdn(search);
+    if (!response.exists) {
+        alert("Package not found");
+        return [];
     }
-    return {
-      packageName: firstLineMatch[1],
-      version: firstLineMatch[2]
-    };
+    return [
+        { name: response.packageName, version: response.version, main: response.main },
+    ]
+}
+
+
+export function getGlobalVarName(packageName:any) {
+  const packageMap:any = {
+    'lodash': '_',
+    'jquery': '$',
+    'moment': 'moment',
+    'axios': 'axios',
+    // Add more
+  };
+  
+  return packageMap[packageName] || camelCase(packageName);
+}
+
+
+export function updatePackageJson(packageJson: any, newDependencies: any) {
+  let parsedContent = JSON.parse(packageJson.content);
+
+  parsedContent.dependencies = {
+    ...parsedContent.dependencies,
+    ...newDependencies.dependencies
+  };
+
+  packageJson.content = JSON.stringify(parsedContent, null, 2);
+
+  return packageJson;
+}
+
+export function removeDependencyFromPackageJson(packageJson: any, dependencyName: string) {
+  let parsedContent = JSON.parse(packageJson.content);
+
+  if (parsedContent.dependencies && parsedContent.dependencies[dependencyName]) {
+    delete parsedContent.dependencies[dependencyName];
   }
+
+  packageJson.content = JSON.stringify(parsedContent, null, 2);
+
+  return packageJson;
+}
+
+function camelCase(str: string) {
+  return str.replace(/-([a-z])/g, (g) => g[1].toUpperCase());
+}

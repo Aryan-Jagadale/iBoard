@@ -5,10 +5,12 @@ import { toast } from "sonner";
 import { Link, RotateCw,Inspect } from "lucide-react";
 import * as esbuild from "esbuild-wasm";
 import { injectConsoleLogging } from "@/lib/utils";
+import { fetchPackages, getGlobalVarName } from "@/lib/packageFetcher";
 
 export default function PreviewWindow({
     type,
     files,
+    newPackages
 }: {
     type: string;
     files: Array<{
@@ -18,9 +20,8 @@ export default function PreviewWindow({
         content: string;
         saved: boolean;
     }>;
+    newPackages: any;
 }) {
-    console.log("files",files);
-    
     const ref = useRef<HTMLIFrameElement>(null);
     const [iframeKey, setIframeKey] = useState(0);
     const [srcDoc, setSrcDoc] = useState<string>("");
@@ -86,6 +87,21 @@ export default function PreviewWindow({
                 acc[`/${file.name}`] = file.content; 
                 return acc;
             }, {} as Record<string, string>);
+
+            // External pacakges
+            let newPackages:any = files.find((file) => file.name === "package.json");
+            if (!newPackages) {
+                toast.error("package.json file is missing.");
+                return;
+            }
+            newPackages = JSON.parse(newPackages.content).dependencies;
+            newPackages = Object.keys(newPackages).map((pkg) => ({name: pkg, version: newPackages[pkg]}));
+            const externalPackages = await newPackages.filter((pkg:any) => pkg.name !== 'react' && pkg.name !== 'react-dom').reduce(async (accPromise:any, pkg:any) => {
+                const acc = await accPromise;
+                const results = await fetchPackages(pkg.name);
+                acc[pkg.name] = `https://unpkg.com/${pkg.name}@${pkg.version}/${results[0].main}`;
+                return acc;
+            }, Promise.resolve({}));
     
             // Build the bundle
             const result = await esbuild.build({
@@ -107,6 +123,17 @@ export default function PreviewWindow({
                     {
                         name: "file-resolver",
                         setup(build) {
+                            // Handle external pacakges
+                            build.onResolve({ filter: /^(\w|-)+$/ }, (args) => {
+                                const importPath = args.path.startsWith('/') ? args.path.slice(1) : args.path;
+                                if (importPath === 'react' || importPath === 'react-dom') {
+                                    return;
+                                }
+                                if (externalPackages[importPath]) {
+                                  return {path: importPath, namespace: 'external-import'};
+                                }
+                                return { path: importPath, external: true };
+                            });
                             // Handle bare imports (react, react-dom, etc)
                             build.onResolve({ filter: /^react(-dom)?$/ }, (args) => {
                                 return { path: args.path, namespace: 'external-import' };
@@ -124,8 +151,6 @@ export default function PreviewWindow({
                             // Handle relative imports
                             build.onResolve({ filter: /^\.+\// }, (args) => {
                                 const importPath = args.path.replace(/^\.\//, '');
-                                
-                                // Try different possible file paths
                                 const possiblePaths = [
                                     importPath,
                                     `${importPath}.jsx`,
@@ -139,7 +164,6 @@ export default function PreviewWindow({
                                 if (!existingPath) {
                                     throw new Error(`Could not resolve ${args.path}. Tried: ${possiblePaths.join(', ')}`);
                                 }
-    
                                 return {
                                     path: existingPath,
                                     namespace: 'local-file'
@@ -162,8 +186,6 @@ export default function PreviewWindow({
                                 if (!content) {
                                     throw new Error(`Could not find CSS file ${args.path}`);
                                 }
-                                
-                                // Convert CSS into a JavaScript module that injects styles
                                 const jsContent = `
                                     const style = document.createElement('style');
                                     style.textContent = ${JSON.stringify(content)};
@@ -190,6 +212,12 @@ export default function PreviewWindow({
                                         loader: 'js',
                                     };
                                 }
+                                if (externalPackages[args.path]) {
+                                    return {
+                                      contents: `module.exports = window.${getGlobalVarName(args.path)};`,
+                                      loader: 'js',
+                                    };
+                                }
                             });
                         },
                     },
@@ -197,13 +225,17 @@ export default function PreviewWindow({
             });
             const bundledCode = result.outputFiles[0].text;
             const htmlFile = files.find((file) => file.name === "index.html");
-            
+
+            const cdnScriptTags = Object.values(externalPackages).map((link: any) => 
+                `<script crossorigin src="${link}"></script>`
+              ).join('\n');
             if (htmlFile) {
                 const combinedHTML = injectConsoleLogging(htmlFile.content.replace(
                     "</body>",
                     `
                     <script crossorigin src="https://unpkg.com/react@18/umd/react.development.js"></script>
                     <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+                    ${cdnScriptTags}
                     <script>${bundledCode}</script>
                     </body>
                     `
@@ -275,7 +307,7 @@ export default function PreviewWindow({
         } else if (type === "react") {
             runReactApp();
         }
-    }, [files, type, esbuildInitialized]);
+    }, [files, type, esbuildInitialized, newPackages]);
 
     return (
         <>
