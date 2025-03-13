@@ -124,7 +124,7 @@ export default function PreviewWindow({
                         name: "file-resolver",
                         setup(build) {
                             // Handle external pacakges
-                            build.onResolve({ filter: /^(\w|-)+$/ }, (args) => {
+                            build.onResolve({ filter: /^(\w|-)+(\/.*)?$/ }, (args) => {
                                 const importPath = args.path.startsWith('/') ? args.path.slice(1) : args.path;
                                 if (importPath === 'react' || importPath === 'react-dom') {
                                     return;
@@ -234,6 +234,9 @@ export default function PreviewWindow({
                     "</body>",
                     `
                     <script crossorigin src="https://unpkg.com/react@18/umd/react.development.js"></script>
+                    <script>
+                        window.react = window.React;
+                    </script>
                     <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
                     ${cdnScriptTags}
                     <script>${bundledCode}</script>

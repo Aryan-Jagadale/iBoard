@@ -39,10 +39,10 @@ export function getGlobalVarName(packageName:any) {
     'jquery': '$',
     'moment': 'moment',
     'axios': 'axios',
-    // Add more
+    // 'lucide-react': 'LucideReact'
   };
   
-  return packageMap[packageName] || camelCase(packageName);
+  return packageMap[packageName] || packageName;
 }
 
 
