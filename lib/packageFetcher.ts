@@ -24,7 +24,6 @@ export const fetchPackageCdn = async (packageName: string) => {
 export const fetchPackages = async (search: string) => {
     const response: any = await fetchPackageCdn(search);
     if (!response.exists) {
-        alert("Package not found");
         return [];
     }
     return [
@@ -69,8 +68,4 @@ export function removeDependencyFromPackageJson(packageJson: any, dependencyName
   packageJson.content = JSON.stringify(parsedContent, null, 2);
 
   return packageJson;
-}
-
-function camelCase(str: string) {
-  return str.replace(/-([a-z])/g, (g) => g[1].toUpperCase());
 }

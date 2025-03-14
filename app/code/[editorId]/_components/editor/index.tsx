@@ -266,6 +266,7 @@ const CodeEditor = () => {
                             type={serverFileType}
                             files={serverFiles}
                             newPackages={newPackages}
+                            servervboxId={servervboxId}
                         />
                         </ResizablePanel>
                         <ResizableHandle />

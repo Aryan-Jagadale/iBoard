@@ -7,6 +7,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { fetchPackageCdn, updatePackageJson,removeDependencyFromPackageJson, fetchPackages } from "@/lib/packageFetcher"
 import { useDebounce } from "@/hooks/useDebounce"
 import { Trash2 } from "lucide-react"
+import { toast } from "sonner"
 
 export default function PackageManager({ servervboxId,socketRef, newPackages, setNewPackages, serverFiles, setServerFiles }: any) {
     const [isOpen, setIsOpen] = useState(false)
@@ -19,10 +20,13 @@ export default function PackageManager({ servervboxId,socketRef, newPackages, se
     const debouncedFetchSuggestions = useDebounce(async () => {
         if (newPackage.name.length > 2) {
             const results = await fetchPackages(newPackage.name);
+            if (results.length === 0) {
+                return toast.error("No packages found with that name");
+            }
             setSuggestions(results);
         } else {
             setSuggestions([]);
-        }}, { delay: 500 });
+        }}, { delay: 5000 });
 
     const debouncedFileUpdate = useDebounce((fileId: string, content: string, virtualboxId: string, bucketPath: string, fileName: string) => {
         socketRef.current?.emit("fileUpdate", {
