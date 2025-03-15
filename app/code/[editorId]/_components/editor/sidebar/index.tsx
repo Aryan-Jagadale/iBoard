@@ -7,7 +7,7 @@ import { FilePlus, FolderPlus, CopyMinus, ChevronRight, ChevronDown } from 'luci
 import { Hint } from '@/components/hint';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
-
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import {
   ContextMenu,
   ContextMenuContent,
@@ -15,6 +15,8 @@ import {
   ContextMenuTrigger,
 } from "@/components/ui/context-menu"
 import PackageManager from './package-manager';
+import { fileExtensions } from '@/lib/constants';
+import { toast } from 'sonner';
 
 const FileTreeNode = ({ node, level = 0, onDelete, onRename, onAddFile, onAddFolder,onClickFile,activeId }: { 
   node: any; 
@@ -136,10 +138,23 @@ const FileTreeNode = ({ node, level = 0, onDelete, onRename, onAddFile, onAddFol
   );
 };
 
-const FileExplorer = ({serverFileType, newPackages,setNewPackages,data,setData,servervboxId,socketRef,selectFile,activeId }: any) => {
+const FileExplorer = ({serverFileType, newPackages,setNewPackages,data,setData,servervboxId,socketRef,selectFile,activeId }: { 
+  serverFileType: keyof typeof fileExtensions; 
+  newPackages: any; 
+  setNewPackages: any; 
+  data: any; 
+  setData: any; 
+  servervboxId: any; 
+  socketRef: any; 
+  selectFile: any; 
+  activeId: any; 
+}) => {
   // const [fileTree, setFileTree] = useState<any[]>([]);
   const [newItemName, setNewItemName] = useState("");
   const [dialogType, setDialogType] = useState<"file" | "folder" | null>(null);
+  const [fileExtension, setFileExtension] = useState<string>(".txt");
+
+  const extensions = fileExtensions[serverFileType];
 
   const deleteNode = (nodeId: string,fileName:string) => {
     const deleteNodeRecursive = (nodes: any[],nodeId:string): any[] => {
@@ -231,10 +246,14 @@ const FileExplorer = ({serverFileType, newPackages,setNewPackages,data,setData,s
 
   const handleDialogSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    if (!newItemName || newItemName.length< 4) {
+      toast.error("Name should be atleast 4 characters long");
+      return;
+    }
     if (dialogType === 'file') {
-      handleAddFile(null, newItemName);
+      handleAddFile(null, `${newItemName}${fileExtension}`);
     } else if (dialogType === 'folder') {
-      handleAddFolder(null, newItemName);
+      handleAddFolder(null, `${newItemName}${fileExtension}`);
     }
     setDialogType(null);
     setNewItemName("");
@@ -251,7 +270,14 @@ const FileExplorer = ({serverFileType, newPackages,setNewPackages,data,setData,s
         socket.off('fileCreatedBroadcast');
       }
     }
-  },[socketRef])
+  },[socketRef]);
+
+  useEffect(() => {
+    if (serverFileType) {
+      setFileExtension(fileExtensions[serverFileType][0]);
+    }
+  }
+  ,[serverFileType]);
   return (
     <div className="px-2 rounded shadow">
       <div className="my-3 space-x-2 cursor-pointer flex items-center justify-end gap-1">
@@ -312,9 +338,28 @@ const FileExplorer = ({serverFileType, newPackages,setNewPackages,data,setData,s
               onChange={(e) => setNewItemName(e.target.value)}
               placeholder={dialogType === 'file' ? 'File name' : 'Folder name'}
               className="my-4"
+              minLength={4}
+              maxLength={10}
             />
+            <Select value={fileExtension} onValueChange={setFileExtension}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select extension" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {extensions.map((ext) => (
+                      <SelectItem key={ext} value={ext}>
+                        {ext}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+            </Select>
+            <div className="text-sm text-muted-foreground mt-2">
+                  Preview: {newItemName}
+                  {fileExtension}
+              </div>
+
             <DialogFooter>
-              <Button type="submit">Add</Button>
+              <Button className='mt-4' type="submit">Add</Button>
             </DialogFooter>
           </form>
         </DialogContent>

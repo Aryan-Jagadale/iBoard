@@ -29,7 +29,7 @@ const CodeEditor = () => {
     const [activeId, setActiveId] = useState<string>("");
     const [tabs, setTabs] = useState<any[]>([]);
     const [serverFiles, setServerFiles] = useState<any[]>([]);
-    const [serverFileType, setServerFileType] = useState("");
+    const [serverFileType, setServerFileType] = useState<"react" | "html-css" | "html-css-js">("react");
     const [servervboxId, setServerVboxId] = useState("");
     const [serverS3path, setServerS3path] = useState<any[]>([]);
     const socketRef = useRef<Socket | null>(null);
