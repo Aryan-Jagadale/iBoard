@@ -4,6 +4,8 @@ import React, { useRef, useState, useEffect } from "react";
 import { toast } from "sonner";
 import { Link, RotateCw } from "lucide-react";
 import { io, Socket } from "socket.io-client";
+import { saveBuildToIndexedDB } from "@/lib/db";
+import { getBuildLink } from "@/lib/axios";
 
 
 export default function PreviewWindow({
@@ -28,8 +30,37 @@ export default function PreviewWindow({
     const [srcDoc, setSrcDoc] = useState<string>("");
     const socketRef = useRef<Socket | null>(null);
 
-    const runReactApp = async (data:any) => {
+    const runReactApp = async (data:any,s3Link:boolean) => {
         try {
+            if (s3Link) {
+                let cssContent = "";
+                try {
+                    const response = await fetch(data?.cssPath);
+                    const cssText = await response.text();
+                    cssContent += cssText;
+                } catch (error) {
+                    console.error("Failed to load CSS file:", data?.cssPath, error);
+                }
+                const reactAppHTML = `
+            <!DOCTYPE html>
+                <html lang="en">
+                <head>
+                    <meta charset="UTF-8">
+                    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+                    <title>React App Preview</title>
+                    <style>${cssContent}</style> 
+                </head>
+                <body>
+                    <div id="root"></div>
+                    <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+                    <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+                    <script type="module" src=${data?.bundle}></script>
+                </body>
+                </html>`;
+
+                setSrcDoc(reactAppHTML);
+                return;
+            }
             let styleTag = document.querySelector("#dynamic-style");
             if (!styleTag) {
                 styleTag = document.createElement("style");
@@ -38,7 +69,8 @@ export default function PreviewWindow({
             }
             styleTag.innerHTML = data?.cssFiles;
 
-        const reactAppHTML = `
+            console.log("Running React app...");        
+            const reactAppHTML = `
             <!DOCTYPE html>
                 <html lang="en">
                 <head>
@@ -51,10 +83,10 @@ export default function PreviewWindow({
                     <div id="root"></div>
                     <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
                     <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
-                    <script>${data?.bundle}</script>
+                    <script type="module">${data?.bundle}</script>
                 </body>
                 </html>`;
-        setSrcDoc(reactAppHTML);
+            setSrcDoc(reactAppHTML);
 
         } catch (error) {
             console.error("Error running React app:", error);
@@ -71,9 +103,11 @@ export default function PreviewWindow({
           console.log("WebSocket disconnected");
         });
 
-        socketRef.current.on("build_complete", (data) => {
+        socketRef.current.on("build_complete",async (data) => {
             console.log("Build complete:");
-            runReactApp(data);
+            runReactApp(data,false);
+            console.log("No build found in indexedDB, saving new build");
+            await saveBuildToIndexedDB(data?.vbId, data?.bundle, data?.cssFiles); 
         })
 
         return () => {
@@ -111,6 +145,18 @@ export default function PreviewWindow({
             }
         }
     }, [files, type,newPackages]);
+
+    useEffect(() => {
+      if (servervboxId) {
+        getBuildLink(servervboxId).then((response:any) => {
+            if (response.status === 200) {
+                if(response.data?.bundle){
+                    runReactApp(response.data,true);
+                }
+            }
+        }); 
+      }
+    }, [servervboxId])
 
     return (
         <>

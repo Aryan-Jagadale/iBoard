@@ -64,7 +64,7 @@ const FileTreeNode = ({ node, level = 0, onDelete, onRename, onAddFile, onAddFol
   };
 
   const renderContent = () => (
-    <div className={`flex items-center space-x-2 h-6 leading-6 ${node.type === 'file' ? 'ml-6' : ''} `} onClick={toggleFolder}>
+    <div className={`flex items-center space-x-2 h-7 leading-10 ${node.type === 'file' ? 'ml-6' : ''} `} onClick={toggleFolder}>
       {node.type === 'folder' && (
         <span className="cursor-pointer">
           {isOpen ? <ChevronDown size={16} /> : <ChevronRight size={16} />}
@@ -86,7 +86,7 @@ const FileTreeNode = ({ node, level = 0, onDelete, onRename, onAddFile, onAddFol
           />
         </form>
       ) : (
-        <span className={`text-sm text-gray-400 hover:text-gray-100 hover:cursor-pointer ${node.id === activeId ? 'text-white' : ''}`} onClick={() => node.type === 'file' ? onClickFile(node) : null}>
+        <span className={`text-sm text-gray-400 hover:text-gray-100 hover:cursor-pointer ${node.id === activeId ? 'text-white bg-grey' : ''}`} onClick={() => node.type === 'file' ? onClickFile(node) : null}>
           {node.name}
         </span>
       )}
@@ -96,7 +96,7 @@ const FileTreeNode = ({ node, level = 0, onDelete, onRename, onAddFile, onAddFol
   return (
     <ContextMenu>
       <ContextMenuTrigger>
-        <div style={{ paddingLeft: `${level * 12}px` }}>
+        <div style={{ paddingLeft: `${level * 12}px`,backgroundColor:node.id === activeId ? 'rgba(255,255,255,0.15)' : '' }}>
           {renderContent()}
           {node.type === 'folder' && isOpen && node.children && (
             <div>
@@ -295,9 +295,9 @@ const FileExplorer = ({serverFileType, newPackages,setNewPackages,data,setData,s
 
       {
         serverFileType === 'react' && (
-          <div>
-          <PackageManager servervboxId={servervboxId} socketRef={socketRef} newPackages={newPackages} setNewPackages={setNewPackages} serverFiles={data} setServerFiles={setData}/>
-        </div>
+          <div className='pt-4'>
+            <PackageManager servervboxId={servervboxId} socketRef={socketRef} newPackages={newPackages} setNewPackages={setNewPackages} serverFiles={data} setServerFiles={setData}/>
+          </div>
         )
       }
 

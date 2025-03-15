@@ -19,7 +19,7 @@ const MainPage = async () => {
       <ThemeProvider attribute="class"
         defaultTheme="dark"
         enableSystem={false}>
-        <Navbar />
+        <Navbar showSearch={true} />
         <Dashboard userId={user?.id} />
       </ThemeProvider>
 

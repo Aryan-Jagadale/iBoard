@@ -11,8 +11,10 @@ export default function DashboardNavbarSearch() {
 
   useEffect(() => {
     const delayDebounceFn = setTimeout(() => {
-      if (search) {
+      if (search !== undefined || search !== null) {
         router.push(`/code?q=${search}`);
+      }else{
+        router.push(`/code`);
       }
     }, 300);
 

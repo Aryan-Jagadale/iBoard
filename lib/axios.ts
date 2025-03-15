@@ -41,3 +41,30 @@ export const deleteRequest = async (url: string,data:any) => {
     return error;
   }
 }
+
+
+export const savetoS3 = async (data:any) => {
+  try {
+    let response = await axios.post(`${expressURL}/api/build-s3`, data,{
+      headers: {
+        'Content-Type': 'application/json'
+      }
+    });
+    return response;
+  } catch (error) {
+    return error;
+  }
+}
+
+export const getBuildLink = async (vbId:string) => {
+  try {
+    let response = await axios.get(`${expressURL}/api/build-data/${vbId}`,{
+      headers: {
+        'Content-Type': 'application/json'
+      }
+    });
+    return response;
+  } catch (error) {
+    return error;
+  }
+}

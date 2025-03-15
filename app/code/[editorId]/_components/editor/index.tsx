@@ -163,8 +163,8 @@ const CodeEditor = () => {
         <>
             <ResizablePanelGroup direction="horizontal">
                 <ResizablePanel
-                    maxSize={40}
-                    minSize={0}
+                    maxSize={20}
+                    minSize={15}
                     defaultSize={15}
                     className="flex flex-col p-2"
                 >
@@ -179,7 +179,7 @@ const CodeEditor = () => {
                     defaultSize={60}
                     className="flex flex-col p-2"
                 >
-                    <div className="h-9 w-full flex gap-1 overflow-scroll">
+                    <div className="h-[2.8rem] w-full flex gap-[0.10rem] overflow-scroll">
                         {tabs.map((tab) => (
                             <Tab
                                 key={tab.id}

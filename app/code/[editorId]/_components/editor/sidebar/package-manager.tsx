@@ -108,10 +108,12 @@ export default function PackageManager({ servervboxId,socketRef, newPackages, se
     },[serverFiles])
 
     return (
-        <div className="p-4">
             <Drawer open={isOpen} onOpenChange={setIsOpen}>
                 <DrawerTrigger asChild>
-                    <Button>Add npm Packages</Button>
+                    <Button style={{
+                        borderRadius: "0rem",
+                        border:"1px solid grey",
+                    }} className="bg-transparent w-full" variant="ghost">Add npm Packages</Button>
                 </DrawerTrigger>
                 <DrawerContent>
                     <DrawerHeader>
@@ -197,6 +199,5 @@ export default function PackageManager({ servervboxId,socketRef, newPackages, se
                     </div>
                 </DrawerContent>
             </Drawer>
-        </div>
     )
 }

@@ -34,9 +34,9 @@ const Page = async ({ params }: CodePageProps) => {
     >
       <div className="flex w-screen  flex-col h-screen bg-background">
         <div className="h-12 flex">
-          <Navbar />
+          <Navbar showSearch={false} />
         </div>
-        <div className="w-screen flex grow">
+        <div className="w-screen h-[90vh] flex grow">
           <CodeEditor />
         </div>
 
