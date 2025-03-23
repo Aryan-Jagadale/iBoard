@@ -30,37 +30,8 @@ export default function PreviewWindow({
     const [srcDoc, setSrcDoc] = useState<string>("");
     const socketRef = useRef<Socket | null>(null);
 
-    const runReactApp = async (data:any,s3Link:boolean) => {
+    const runReactApp = async (data:any) => {
         try {
-            if (s3Link) {
-                let cssContent = "";
-                try {
-                    const response = await fetch(data?.cssPath);
-                    const cssText = await response.text();
-                    cssContent += cssText;
-                } catch (error) {
-                    console.error("Failed to load CSS file:", data?.cssPath, error);
-                }
-                const reactAppHTML = `
-            <!DOCTYPE html>
-                <html lang="en">
-                <head>
-                    <meta charset="UTF-8">
-                    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-                    <title>React App Preview</title>
-                    <style>${cssContent}</style> 
-                </head>
-                <body>
-                    <div id="root"></div>
-                    <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
-                    <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
-                    <script type="module" src=${data?.bundle}></script>
-                </body>
-                </html>`;
-
-                setSrcDoc(reactAppHTML);
-                return;
-            }
             let styleTag = document.querySelector("#dynamic-style");
             if (!styleTag) {
                 styleTag = document.createElement("style");
@@ -95,25 +66,31 @@ export default function PreviewWindow({
     };
 
     useEffect(() => {
-        socketRef.current = io(process.env.NEXT_PUBLIC_SOCKET_URL || "http://localhost:5000");
+        socketRef.current = io(process.env.NEXT_PUBLIC_BUILD_SOCKET_URL || "http://localhost:5000");
         socketRef.current.on("connect", () => {
-          console.log("WebSocket connected:", socketRef.current?.id);
+            if (socketRef.current) {
+                socketRef.current.emit('join_build', { vbId: servervboxId });
+                console.log("WebSocket connected:", socketRef.current?.id);
+            }
         });
         socketRef.current.on("disconnect", () => {
           console.log("WebSocket disconnected");
         });
 
         socketRef.current.on("build_complete",async (data) => {
-            console.log("Build complete:");
-            runReactApp(data,false);
-            console.log("No build found in indexedDB, saving new build");
-            await saveBuildToIndexedDB(data?.vbId, data?.bundle, data?.cssFiles); 
+            if (data?.vbId === servervboxId) {
+                console.log("Build complete:");
+                runReactApp(data);
+                console.log("No build found in indexedDB, saving new build");
+                await saveBuildToIndexedDB(data?.vbId, data?.bundle, data?.cssFiles); 
+            }
         })
 
         return () => {
             socketRef.current?.off("build_complete");
-            socketRef.current?.disconnect()};
-    }, [iframeKey]);
+            socketRef.current?.disconnect();
+        };
+    }, [iframeKey,servervboxId]);
 
     useEffect(() => {
         if (type === "html-css" || type === "html-css-js") {
@@ -126,6 +103,21 @@ export default function PreviewWindow({
                     "</head>",
                     `<style>${cssFile.content}</style></head>`
                 );
+                const loggingScript = `
+            <script>
+                (function() {
+                    const methods = ['log', 'error', 'warn', 'info'];
+                    methods.forEach((method) => {
+                        const original = console[method];
+                        console[method] = function(...args) {
+                            window.parent.postMessage({ type: 'console', method, data: args }, '*');
+                            original.apply(console, args);
+                        };
+                    });
+                })();
+            </script>
+        `;
+                combinedHTML = combinedHTML.replace("</head>", `${loggingScript}</head>`);
 
                 if (jsFiles.length > 0) {
                     const scriptTags = jsFiles
@@ -145,18 +137,6 @@ export default function PreviewWindow({
             }
         }
     }, [files, type,newPackages]);
-
-    useEffect(() => {
-      if (servervboxId) {
-        getBuildLink(servervboxId).then((response:any) => {
-            if (response.status === 200) {
-                if(response.data?.bundle){
-                    runReactApp(response.data,true);
-                }
-            }
-        }); 
-      }
-    }, [servervboxId])
 
     return (
         <>

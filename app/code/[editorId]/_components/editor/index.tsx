@@ -93,7 +93,7 @@ const CodeEditor = () => {
             bucketPath,
             fileName
         });
-    }, { delay: 10000 });
+    }, { delay: 20000 });
 
     const handleEditorChange = (value: string | undefined) => {
         if (activeId && value !== undefined) {
@@ -106,7 +106,6 @@ const CodeEditor = () => {
                     }
                     return fileOrFolder;
                 });
-                console.log("updatedFiles::>",updatedFiles);
                 setServerFiles(updatedFiles);
             });
         }
@@ -270,9 +269,9 @@ const CodeEditor = () => {
                         />
                         </ResizablePanel>
                         <ResizableHandle />
-                        <ResizablePanel defaultSize={50} minSize={20} className="p-2 flex flex-col">
+                        <ResizablePanel defaultSize={50} minSize={10} className="p-2 flex flex-col">
                             <div className='w-full relative grow h-full overflow-hidden rounded-lg bg-secondary'>
-                                <EditorTerminal files={serverFiles} />
+                                <EditorTerminal files={serverFiles} type={serverFileType} servervboxId={servervboxId}/>
                             </div>
                         </ResizablePanel>
 
