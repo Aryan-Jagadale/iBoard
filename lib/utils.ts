@@ -203,6 +203,12 @@ export function processFileType(file: string) {
   const ending = file.split(".").pop();
   if (ending === "ts" || ending === "tsx") return "typescript";
   if (ending === "js" || ending === "jsx") return "javascript";
+  if (ending === "py") return "python";
+  if (ending === "html") return "html";
+  if (ending === "css") return "css";
+  if (ending === "json") return "json";
+  if (ending === "md") return "markdown";
+  if (ending === "txt") return "plaintext";
   if (ending) return ending;
   return "plaintext";
 }

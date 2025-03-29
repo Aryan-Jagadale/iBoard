@@ -91,7 +91,8 @@ const CodeEditor = () => {
             content,
             virtualboxId,
             bucketPath,
-            fileName
+            fileName,
+            virtualboxType: serverFileType,
         });
     }, { delay: 20000 });
 

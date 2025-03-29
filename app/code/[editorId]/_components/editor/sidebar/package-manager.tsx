@@ -9,7 +9,7 @@ import { useDebounce } from "@/hooks/useDebounce"
 import { Trash2 } from "lucide-react"
 import { toast } from "sonner"
 
-export default function PackageManager({ servervboxId,socketRef, newPackages, setNewPackages, serverFiles, setServerFiles }: any) {
+export default function PackageManager({ serverFileType,servervboxId,socketRef, newPackages, setNewPackages, serverFiles, setServerFiles }: any) {
     const [isOpen, setIsOpen] = useState(false)
     const [packages, setPackages] = useState<Array<{ name: string; version: string,main:string }>>([{ name: "react", version: "18.0.2",main:"react.development.js" },
     { name: "react-dom", version: "18.0.2",main:"react-dom.development.js" }])
@@ -34,7 +34,8 @@ export default function PackageManager({ servervboxId,socketRef, newPackages, se
             content,
             virtualboxId,
             bucketPath,
-            fileName
+            fileName,
+            virtualboxType:serverFileType
         });
     }, { delay: 10000 });
 

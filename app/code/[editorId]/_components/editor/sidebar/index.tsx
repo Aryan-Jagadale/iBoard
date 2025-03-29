@@ -322,7 +322,7 @@ const FileExplorer = ({serverFileType, newPackages,setNewPackages,data,setData,s
       {
         serverFileType === 'react' && (
           <div className='pt-4'>
-            <PackageManager servervboxId={servervboxId} socketRef={socketRef} newPackages={newPackages} setNewPackages={setNewPackages} serverFiles={data} setServerFiles={setData}/>
+            <PackageManager serverFileType={serverFileType} servervboxId={servervboxId} socketRef={socketRef} newPackages={newPackages} setNewPackages={setNewPackages} serverFiles={data} setServerFiles={setData}/>
           </div>
         )
       }

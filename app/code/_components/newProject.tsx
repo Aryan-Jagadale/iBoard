@@ -70,17 +70,17 @@ const data: {
     disabled: false,
   },
   {
-    id: "node",
-    name: "Node",
-    icon: "/project-icons/node.svg",
-    description: "A Javascript runtime built on the V8 Javascript engine",
-    disabled: false,
-  },
-  {
     id: "python",
     name: "Python",
     icon: "/project-icons/python.svg",
     description: "A high-level, general-purpose language, coming soon",
+    disabled: false,
+  },
+  {
+    id: "node",
+    name: "Node",
+    icon: "/project-icons/node.svg",
+    description: "A Javascript runtime built on the V8 Javascript engine",
     disabled: true,
   },
   {
