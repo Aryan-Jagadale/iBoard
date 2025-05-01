@@ -173,3 +173,77 @@ export function penPointsToPathLayer(
       .map(([x, y, pressure]) => [x - left, y - top, pressure]),
   };
 };
+
+
+export function validateName(
+  newName: string,
+  oldName: string,
+  type: "file" | "folder"
+) {
+  if (newName === oldName || newName.length === 0) {
+    return false;
+  }
+  if (
+    newName.includes("/") ||
+    newName.includes("\\") ||
+    newName.includes(" ") ||
+    (type === "file" && !newName.includes(".")) ||
+    (type === "folder" && newName.includes("."))
+  ) {
+    // toast.error("Invalid file name");
+    return false;
+  }
+
+  return true;
+}
+
+
+
+export function processFileType(file: string) {
+  const ending = file.split(".").pop();
+  if (ending === "ts" || ending === "tsx") return "typescript";
+  if (ending === "js" || ending === "jsx") return "javascript";
+  if (ending === "py") return "python";
+  if (ending === "html") return "html";
+  if (ending === "css") return "css";
+  if (ending === "json") return "json";
+  if (ending === "md") return "markdown";
+  if (ending === "txt") return "plaintext";
+  if (ending) return ending;
+  return "plaintext";
+}
+
+export const injectConsoleLogging = (html: string) => {
+        const consoleScript = `
+        <script>
+        // Override console methods to send messages to parent window
+        ['log', 'error', 'warn', 'info'].forEach(method => {
+            const originalMethod = console[method];
+            console[method] = (...args) => {
+                // Call original console method
+                originalMethod(...args);
+                
+                // Send message to parent window
+                window.parent.postMessage({
+                    type: 'console-log',
+                    level: method,
+                    args: args.map(arg => {
+                        // Handle circular references
+                        if (typeof arg === 'object') {
+                            try {
+                                return JSON.parse(JSON.stringify(arg));
+                            } catch {
+                                return arg.toString();
+                            }
+                        }
+                        return arg;
+                    })
+                }, '*');
+            };
+        });
+        </script>
+        `;
+
+        return html.replace('</body>', `${consoleScript}</body>`);
+    };
+
