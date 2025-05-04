@@ -66,7 +66,7 @@ export default function PreviewWindow({
     };
 
     useEffect(() => {
-        socketRef.current = io(process.env.NEXT_PUBLIC_BUILD_SOCKET_URL || "http://localhost:5000");
+        socketRef.current = io(process.env.NEXT_PUBLIC_BUILD_SOCKET_URL);
         socketRef.current.on("connect", () => {
             if (socketRef.current) {
                 socketRef.current.emit('join_build', { vbId: servervboxId });

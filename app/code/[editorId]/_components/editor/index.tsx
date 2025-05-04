@@ -17,6 +17,7 @@ import EditorTerminal from './terminal';
 import { io, Socket } from "socket.io-client";
 import { useDebounce } from '@/hooks/useDebounce';
 import { draculaTheme } from '@/lib/dracula-theme';
+import { useAuth } from "@clerk/nextjs";
 
 const CodeEditor = () => {
     const editorRef = useRef<null | monaco.editor.IStandaloneCodeEditor>(null);
@@ -34,6 +35,7 @@ const CodeEditor = () => {
     const [serverS3path, setServerS3path] = useState<any[]>([]);
     const socketRef = useRef<Socket | null>(null);
     const [newPackages, setNewPackages] = useState([]);
+    const { getToken, isSignedIn, userId } = useAuth();
 
     const clerk = useClerk();
 
@@ -123,7 +125,17 @@ const CodeEditor = () => {
     };
 
     useEffect(() => {
-        socketRef.current = io(process.env.NEXT_PUBLIC_SOCKET_URL || "http://localhost:4001");
+        socketRef.current = io(process.env.NEXT_PUBLIC_SOCKET_URL,{
+            transports: ["websocket",'polling'],
+            auth: async (cb) => {
+                if (isSignedIn) {
+                    const token = await getToken();
+                    cb({ token });
+                } else {
+                    cb({ token: null });
+                }
+            },
+        });
         socketRef.current.on("connect", () => {
           console.log("WebSocket connected:", socketRef.current?.id);
         });
