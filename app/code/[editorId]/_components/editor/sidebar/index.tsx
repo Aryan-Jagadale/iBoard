@@ -341,23 +341,29 @@ const FileExplorer = ({serverFileType, newPackages,setNewPackages,data,setData,s
               minLength={4}
               maxLength={10}
             />
-            <Select value={fileExtension} onValueChange={setFileExtension}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select extension" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {extensions.map((ext) => (
-                      <SelectItem key={ext} value={ext}>
-                        {ext}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-            </Select>
-            <div className="text-sm text-muted-foreground mt-2">
-                  Preview: {newItemName}
-                  {fileExtension}
-              </div>
-
+            {
+              dialogType === 'file' && (
+                <>
+                  <Select value={fileExtension} onValueChange={setFileExtension}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select extension" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {extensions.map((ext) => (
+                        <SelectItem key={ext} value={ext}>
+                          {ext}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <div className="text-sm text-muted-foreground mt-2">
+                    Preview: {newItemName}
+                    {fileExtension}
+                  </div>
+                </>
+              )
+            }
+            
             <DialogFooter>
               <Button className='mt-4' type="submit">Add</Button>
             </DialogFooter>
