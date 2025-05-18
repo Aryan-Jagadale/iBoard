@@ -17,6 +17,11 @@ import {
 import PackageManager from './package-manager';
 import { fileExtensions } from '@/lib/constants';
 import { toast } from 'sonner';
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
 
 const FileTreeNode = ({ node, level = 0, onDelete, onRename, onAddFile, onAddFolder,onClickFile,activeId }: { 
   node: any; 
@@ -138,7 +143,10 @@ const FileTreeNode = ({ node, level = 0, onDelete, onRename, onAddFile, onAddFol
   );
 };
 
-const FileExplorer = ({serverFileType, newPackages,setNewPackages,data,setData,servervboxId,socketRef,selectFile,activeId }: { 
+const FileExplorer = ({prompt,setPrompt,sendDatatoBackednLLM,serverFileType, newPackages,setNewPackages,data,setData,servervboxId,socketRef,selectFile,activeId }: { 
+  prompt: string;
+  setPrompt: React.Dispatch<React.SetStateAction<string>>;
+  sendDatatoBackednLLM: any;
   serverFileType: keyof typeof fileExtensions; 
   newPackages: any; 
   setNewPackages: any; 
@@ -278,6 +286,7 @@ const FileExplorer = ({serverFileType, newPackages,setNewPackages,data,setData,s
     }
   }
   ,[serverFileType]);
+
   return (
     <div className="px-2 rounded shadow">
       <div className="my-3 space-x-2 cursor-pointer flex items-center justify-end gap-1">
@@ -326,6 +335,35 @@ const FileExplorer = ({serverFileType, newPackages,setNewPackages,data,setData,s
           </div>
         )
       }
+      <Popover>
+        <PopoverTrigger asChild>
+          <Button style={{
+            borderRadius: "0rem",
+            border:"1px solid grey",
+            marginTop:"0.5rem",
+          }} className="bg-transparent w-full" variant="ghost">Ai assist</Button>
+      </PopoverTrigger>
+      <PopoverContent side='right' className="w-80">
+        <div className="grid gap-4">
+          <div className="space-y-2">
+            <h4 className="font-medium leading-none">Prompt</h4>
+            <Input
+                id="width"
+                value={prompt}
+                onChange={(e) => setPrompt(e.target.value)}
+                className="col-span-2 h-8"
+                placeholder="Enter prompt"
+              />
+          </div>
+          <Button onClick={()=>sendDatatoBackednLLM()}>
+            <div className="flex items-center space-x-2">
+              <span>Send</span>
+            </div>
+          </Button>
+        </div>
+      </PopoverContent>
+      </Popover>
+
 
       <Dialog open={dialogType !== null} onOpenChange={() => setDialogType(null)}>
         <DialogContent>
