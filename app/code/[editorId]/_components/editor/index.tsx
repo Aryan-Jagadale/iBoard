@@ -5,12 +5,12 @@ import {
     ResizablePanel,
     ResizablePanelGroup,
 } from "@/components/ui/resizable"
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState, useCallback } from 'react';
 import monaco from "monaco-editor";
 import Sidebar from './sidebar/index';
 import { useClerk } from "@clerk/nextjs";
 import Tab from "@/components/ui/tab";
-import { processFileType } from '@/lib/utils';
+import { cleanSanitizeContent, processFileType, truncateContent } from '@/lib/utils';
 import PreviewWindow from './preview-window';
 import { getVirualBoxRequest } from '@/lib/axios';
 import EditorTerminal from './terminal';
@@ -18,6 +18,9 @@ import { io, Socket } from "socket.io-client";
 import { useDebounce } from '@/hooks/useDebounce';
 import { draculaTheme } from '@/lib/dracula-theme';
 import { useAuth } from "@clerk/nextjs";
+import { SelectionData } from '@/types/selection-data';
+import { toast } from 'sonner';
+import { AiSuggestionModal } from './ai-suggestion-modal';
 
 const CodeEditor = () => {
     const editorRef = useRef<null | monaco.editor.IStandaloneCodeEditor>(null);
@@ -35,12 +38,39 @@ const CodeEditor = () => {
     const [serverS3path, setServerS3path] = useState<any[]>([]);
     const socketRef = useRef<Socket | null>(null);
     const [newPackages, setNewPackages] = useState([]);
+    const [selectedData, setSelectedData] = useState<SelectionData | null>(null);
+    const [prompt, setPrompt] = useState<string>("");
     const { getToken, isSignedIn, userId } = useAuth();
+
+    // const [aiStream, setAiStream] = useState<string>("");
+    const [aiStreaming, setAiStreaming] = useState<boolean>(false);
+    const [aiSuggestion, setAiSuggestion] = useState<string | null>(null);
+    const [showSuggestion, setShowSuggestion] = useState<boolean>(false);
 
     const clerk = useClerk();
 
     const handleEditorMount: OnMount = (editor, monaco) => {
         editorRef.current = editor;
+
+        editor.onDidChangeCursorSelection((e) => {
+            const selection = editor.getSelection();
+            if (selection) {
+                const selectedText: string = editor.getModel()?.getValueInRange(selection) ?? "";
+                const cleanedContent = cleanSanitizeContent(selectedText);
+                const finalContent = truncateContent(cleanedContent);
+
+                const newSelectionData: SelectionData = {
+                    range: {
+                      startLineNumber: selection.startLineNumber,
+                      startColumn: selection.startColumn,
+                      endLineNumber: selection.endLineNumber,
+                      endColumn: selection.endColumn,
+                    },
+                    content: finalContent,
+                };
+                setSelectedData(newSelectionData);
+            }
+        });
     };
 
     const selectFile = (tab: any) => {
@@ -87,6 +117,46 @@ const CodeEditor = () => {
     };
 
 
+    const sendDatatoBackednLLM = async () => {
+        try {
+        console.log("Sending selection to backend:", selectedData);
+            
+          if(selectedData && selectedData.content.length > 10){
+            const { range, content } = selectedData;
+            const { startLineNumber, startColumn, endLineNumber, endColumn } = range;
+            const fileId = activeId;
+            const fileName = serverFiles.find((file) => file.id === activeId)?.name;
+            const bucketPath = serverS3path.find((file) => file.id === activeId)?.bucketPath;
+            const virtualboxId = servervboxId;
+
+            let payload = {
+                type:'ai-assist',
+                selection: {
+                    startLineNumber,
+                    startColumn,
+                    endLineNumber,
+                    endColumn,
+                },
+                code:content,
+                prompt:prompt,
+                fileId,
+                fileName,
+                virtualboxId,
+                virtualboxType: serverFileType,
+                llmType:"groq"
+            }
+            setAiSuggestion("");
+            setAiStreaming(false);
+            socketRef.current?.emit("send-to-ai-msg", payload);
+          }else{
+            toast.error("Please select a valid code snippet");
+            return;
+          }
+        } catch (error) {
+          console.error("Error sending selection to backend:", error);
+        }
+    }
+
     const debouncedFileUpdate = useDebounce((fileId: string, content: string,virtualboxId:string,bucketPath:string,fileName:string) => {
         socketRef.current?.emit("fileUpdate", {
             fileId,
@@ -124,6 +194,33 @@ const CodeEditor = () => {
         ]);
     };
 
+    const handleAcceptSuggestion = (codeContent:any) => {
+        if (!editorRef.current || !selectedData || !aiSuggestion) return;
+        const editor = editorRef.current;
+        const { startLineNumber, startColumn, endLineNumber, endColumn } = selectedData.range;
+        // Use the monaco instance from the editor
+        const monacoInstance = (window as any).monaco || (editor as any)?.constructor?.monaco;
+        const Range = monacoInstance?.Range || (window as any).monaco?.Range;
+        if (!Range) {
+            toast.error("Monaco instance not found.");
+            return;
+        }
+        editor.executeEdits("", [
+            {
+                range: new Range(startLineNumber, startColumn, endLineNumber, endColumn),
+                text: codeContent,
+                forceMoveMarkers: true,
+            },
+        ]);
+        setShowSuggestion(false);
+        setAiSuggestion(null);
+    };
+
+    const handleRejectSuggestion = () => {
+        setShowSuggestion(false);
+        setAiSuggestion(null);
+    };
+
     useEffect(() => {
         socketRef.current = io(process.env.NEXT_PUBLIC_SOCKET_URL,{
             transports: ["websocket",'polling'],
@@ -146,6 +243,30 @@ const CodeEditor = () => {
           socketRef.current?.disconnect();
         };
     }, []);
+
+    useEffect(() => {
+        if (!socketRef.current) return;
+        socketRef.current.on("ai-stream", (chunk: string) => {
+            setAiSuggestion((prev) => (prev ?? "") + chunk);
+            setShowSuggestion(true);
+        });
+
+        // Listen for AI stream end
+        socketRef.current.on("ai-stream-end", () => {
+            console.log("AI stream ended------");
+            setAiStreaming(false);
+        });
+
+        // Cleanup listeners on unmount
+        return () => {
+            socketRef.current?.off("ai-stream");
+            socketRef.current?.off("ai-stream-end");
+        };
+    }, []);
+
+    console.log("AI Stream:", aiSuggestion);
+    console.log("AI Streaming:", aiStreaming);
+
 
     useEffect(() => {
         async function fetchData() {
@@ -180,7 +301,7 @@ const CodeEditor = () => {
                     defaultSize={15}
                     className="flex flex-col p-2"
                 >
-                    <Sidebar serverFileType={serverFileType} newPackages={newPackages} setNewPackages={setNewPackages}  data={serverFiles} setData={setServerFiles} socketRef={socketRef} servervboxId={servervboxId} selectFile={selectFile} activeId={activeId}/>
+                    <Sidebar prompt={prompt} setPrompt={setPrompt} sendDatatoBackednLLM={sendDatatoBackednLLM} serverFileType={serverFileType} newPackages={newPackages} setNewPackages={setNewPackages}  data={serverFiles} setData={setServerFiles} socketRef={socketRef} servervboxId={servervboxId} selectFile={selectFile} activeId={activeId}/>
 
                 </ResizablePanel>
                 <ResizableHandle />
@@ -209,6 +330,13 @@ const CodeEditor = () => {
                         ref={editorContainerRef}
                         className="grow w-full overflow-hidden relative"
                     >
+                        <AiSuggestionModal
+                            isOpen={showSuggestion}
+                            onClose={() => setShowSuggestion(false)}
+                            suggestion={aiSuggestion ?? ""}
+                            onAccept={handleAcceptSuggestion}
+                            onReject={handleRejectSuggestion}
+                        />           
                         {
                             clerk.loaded ? (
                                 <Editor

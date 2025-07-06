@@ -2,6 +2,7 @@ import { Camera,Color, Side,Layer, LayerType } from "@/types/canvas";
 import { type ClassValue, clsx } from "clsx"
 import { twMerge } from "tailwind-merge"
 import { XYWH, Point, PathLayer } from '../types/canvas';
+const MAX_CONTENT_SIZE = 10000;
 
 const COLORS = [
   "#DC2626", 
@@ -245,5 +246,19 @@ export const injectConsoleLogging = (html: string) => {
         `;
 
         return html.replace('</body>', `${consoleScript}</body>`);
-    };
+};
+
+export const cleanSanitizeContent = (content: string): string => {
+  let cleaned = content.trim().replace(/\s+/g, " ").replace(/\n+/g, "\n");
+  cleaned = cleaned.replace(/[\x00-\x1F\x7F-\x9F]/g, ""); // Remove control characters
+  return cleaned;
+};
+
+export const truncateContent = (content: string): string => {
+  if (content.length > MAX_CONTENT_SIZE) {
+    console.warn(`Content truncated: Exceeded ${MAX_CONTENT_SIZE} characters`);
+    return content.slice(0, MAX_CONTENT_SIZE) + "...[TRUNCATED]";
+  }
+  return content;
+};
 
