@@ -66,7 +66,7 @@ const FileTreeNode = ({ node, level = 0, onDelete, onRename, onAddFile, onAddFol
   };
 
   const renderContent = () => (
-    <div className={`flex items-center space-x-2 h-7 leading-10 ${node.type === 'file' ? 'ml-6' : ''} `} onClick={toggleFolder}>
+    <div className={`flex items-center space-x-2 h-7 hover:cursor-pointer leading-10 ${node.type === 'file' ? 'ml-6' : ''} `} onClick={() => node.type === 'file' ? onClickFile(node) : null}>
       {node.type === 'folder' && (
         <span className="cursor-pointer">
           {isOpen ? <ChevronDown size={16} /> : <ChevronRight size={16} />}
@@ -88,7 +88,7 @@ const FileTreeNode = ({ node, level = 0, onDelete, onRename, onAddFile, onAddFol
           />
         </form>
       ) : (
-        <span className={`text-sm text-gray-400 hover:text-gray-100 hover:cursor-pointer ${node.id === activeId ? 'text-white bg-grey' : ''}`} onClick={() => node.type === 'file' ? onClickFile(node) : null}>
+        <span className={`text-sm text-gray-400 hover:text-gray-100 hover:cursor-pointer ${node.id === activeId ? 'text-white bg-grey' : ''}`} >
           {node.name}
         </span>
       )}
