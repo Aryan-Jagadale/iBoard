@@ -194,32 +194,16 @@ const CodeEditor = () => {
         ]);
     };
 
-    const handleAcceptSuggestion = (codeContent:any) => {
-        if (!editorRef.current || !selectedData || !aiSuggestion) return;
-        const editor = editorRef.current;
-        const { startLineNumber, startColumn, endLineNumber, endColumn } = selectedData.range;
-        // Use the monaco instance from the editor
-        const monacoInstance = (window as any).monaco || (editor as any)?.constructor?.monaco;
-        const Range = monacoInstance?.Range || (window as any).monaco?.Range;
-        if (!Range) {
-            toast.error("Monaco instance not found.");
-            return;
-        }
-        editor.executeEdits("", [
-            {
-                range: new Range(startLineNumber, startColumn, endLineNumber, endColumn),
-                text: codeContent,
-                forceMoveMarkers: true,
-            },
-        ]);
-        setShowSuggestion(false);
-        setAiSuggestion(null);
-    };
+    // const handleAcceptSuggestion = (codeContent:any) => {
+        
+    //     setShowSuggestion(false);
+    //     setAiSuggestion(null);
+    // };
 
-    const handleRejectSuggestion = () => {
-        setShowSuggestion(false);
-        setAiSuggestion(null);
-    };
+    // const handleRejectSuggestion = () => {
+    //     setShowSuggestion(false);
+    //     setAiSuggestion(null);
+    // };
 
     useEffect(() => {
         socketRef.current = io(process.env.NEXT_PUBLIC_SOCKET_URL,{
@@ -334,8 +318,8 @@ const CodeEditor = () => {
                             isOpen={showSuggestion}
                             onClose={() => setShowSuggestion(false)}
                             suggestion={aiSuggestion ?? ""}
-                            onAccept={handleAcceptSuggestion}
-                            onReject={handleRejectSuggestion}
+                            // onAccept={handleAcceptSuggestion}
+                            // onReject={handleRejectSuggestion}
                         />           
                         {
                             clerk.loaded ? (
