@@ -9,7 +9,7 @@ interface CodePageProps {
   params: { editorId: string };
 }
 
-const CodeEditor = dynamic(() => import('./_components/editor/index'), { ssr: false, loading: () => <div>Loading...</div> });
+const CodeEditor = dynamic(() => import('./_components/editor/index'), { ssr: false});
 
 const Page = async ({ params }: CodePageProps) => {
   const user = await currentUser();
@@ -18,12 +18,10 @@ const Page = async ({ params }: CodePageProps) => {
   }
   const { editorId } = params;
 
-  //TODO: Add a check to ensure the editorId is a valid ULID
   const ulidRegex = /^[0-9A-Z]{26}$/;
   if (!ulidRegex.test(editorId)) {
     redirect("/");
   }
-
 
 
   return (
@@ -36,7 +34,7 @@ const Page = async ({ params }: CodePageProps) => {
         <div className="h-12 flex">
           <Navbar showSearch={false} />
         </div>
-        <div className="w-screen h-[90vh] flex grow">
+        <div className="w-screen h-[100vh] flex grow">
           <CodeEditor />
         </div>
 

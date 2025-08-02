@@ -40,7 +40,7 @@ export default function PreviewWindow({
             }
             styleTag.innerHTML = data?.cssFiles;
 
-            console.log("Running React app...");        
+            console.log("Running React app...",data);       
             const reactAppHTML = `
             <!DOCTYPE html>
                 <html lang="en">
@@ -80,6 +80,7 @@ export default function PreviewWindow({
         socketRef.current.on("build_complete",async (data) => {
             if (data?.vbId === servervboxId) {
                 console.log("Build complete:");
+                console.log("Received data:", data);
                 runReactApp(data);
                 console.log("No build found in indexedDB, saving new build");
                 await saveBuildToIndexedDB(data?.vbId, data?.bundle, data?.cssFiles); 

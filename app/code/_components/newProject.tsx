@@ -98,8 +98,8 @@ const formSchema = z.object({
     .min(1)
     .max(16)
     .refine(
-      (value) => /^[a-zA-Z0-9_]+$/.test(value),
-      "Name must be alphanumeric and can contain underscores"
+      (value) => /^[a-zA-Z0-9_ ]+$/.test(value),
+      "Name can contain letters, numbers, underscores, and spaces"
     ),
   visibility: z.enum(["public", "private"]),
 });
@@ -159,9 +159,9 @@ export default function NewProjectModal({
         if (!loading) setOpen(open);
       }}
     >
-      <DialogContent>
+      <DialogContent className="max-h-[90%] overflow-auto max-w-xl">
         <DialogHeader>
-          <DialogTitle>Create A Virtualbox</DialogTitle>
+          <DialogTitle>Create a virtualbox</DialogTitle>
         </DialogHeader>
         <div className="grid grid-cols-2 w-full gap-2 mt-2">
           {data.map((item) => (

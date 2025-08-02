@@ -5,7 +5,7 @@ import {
     ResizablePanel,
     ResizablePanelGroup,
 } from "@/components/ui/resizable"
-import { useEffect, useRef, useState, useCallback } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import monaco from "monaco-editor";
 import Sidebar from './sidebar/index';
 import { useClerk } from "@clerk/nextjs";
@@ -193,17 +193,7 @@ const CodeEditor = () => {
           },
         ]);
     };
-
-    // const handleAcceptSuggestion = (codeContent:any) => {
-        
-    //     setShowSuggestion(false);
-    //     setAiSuggestion(null);
-    // };
-
-    // const handleRejectSuggestion = () => {
-    //     setShowSuggestion(false);
-    //     setAiSuggestion(null);
-    // };
+    
 
     useEffect(() => {
         socketRef.current = io(process.env.NEXT_PUBLIC_SOCKET_URL,{
@@ -247,10 +237,6 @@ const CodeEditor = () => {
             socketRef.current?.off("ai-stream-end");
         };
     }, []);
-
-    console.log("AI Stream:", aiSuggestion);
-    console.log("AI Streaming:", aiStreaming);
-
 
     useEffect(() => {
         async function fetchData() {
@@ -324,7 +310,7 @@ const CodeEditor = () => {
                         {
                             clerk.loaded ? (
                                 <Editor
-                                    height={"100vh"}
+                                    height={"90vh"}
                                     defaultLanguage="typescript"
                                     theme="dracula"
                                     onMount={handleEditorMount}
@@ -367,10 +353,13 @@ const CodeEditor = () => {
                                         smoothScrolling: true,
                                         contextmenu: true,
                                         mouseWheelScrollSensitivity: 1.5,
-                                        wordWrap: 'on',
                                         lineNumbers: 'on',
                                         glyphMargin: false,
                                         renderLineHighlight: 'line',
+                                        readOnly : false,
+                                        wrappingIndent: "indent",
+                                        wordWrap: "wordWrapColumn",
+	                                    wordWrapColumn: 500,
                                     }}
                                     language={editorLanguage}
                                     value={activeFile ?? ""}

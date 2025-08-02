@@ -96,9 +96,30 @@ export default function EditorTerminal({ files, type,servervboxId }: { files: an
     });
 
     const handleMessage = (event: any) => {
+      // Validate the origin of the message
+      const trustedOrigins = [window.location.origin,process.env.NEXT_PUBLIC_BUILD_SOCKET_URL ,process.env.NEXT_EXPRESS_URL, process.env.NEXT_PUBLIC_SOCKET_URL];
+      if (!trustedOrigins.includes(event.origin)) {
+        console.warn(`Rejected message from untrusted origin: ${event.origin}`);
+        return;
+      }
+
       if (event.data?.type === "console") {
-        const { method, data } = event.data;
-        const logMessage = `[${method.toUpperCase()}] ${data.join(" ")}\r\n`;
+        // Validate the message structure and content
+        if (!event.data.method || !Array.isArray(event.data.data)) {
+          console.warn("Received malformed console message:", event.data);
+          return;
+        }
+        
+        // Sanitize the method value
+        const validMethods = ['log', 'error', 'warn', 'info'];
+        const method = validMethods.includes(event.data.method) ? event.data.method : 'log';
+        
+        // Sanitize and limit the data
+        const sanitizedData = event.data.data
+          .filter((item: any) => typeof item === 'string' || typeof item === 'number' || typeof item === 'boolean')
+          .slice(0, 10); // Limit to prevent DoS
+          
+        const logMessage = `[${method.toUpperCase()}] ${sanitizedData.join(" ")}\r\n`;
 
         if (xtermRef.current) {
           xtermRef.current.write(logMessage);

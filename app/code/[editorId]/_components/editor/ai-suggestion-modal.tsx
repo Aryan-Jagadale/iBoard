@@ -121,13 +121,13 @@ export function AiSuggestionModal({ isOpen, onClose, suggestion,
                     <SheetDescription>Review the AI-generated suggestion below.</SheetDescription>
                 </SheetHeader>
 
-                <ScrollArea className="h-[60vh] sm:h-[70vh] my-4">
+                <ScrollArea className="h-[60vh] sm:h-[100vh] my-4">
                     <div className="space-y-4">
                         {parts.map((part, index) => (
                             <div key={index} className="relative">
                                 {part.type === 'code' ? (
                                     <div className="rounded-md border bg-slate-950 p-4">
-                                        <div className="absolute right-3 top-3">
+                                        <div className="absolute left-3 top-3">
                                             <Button
                                                 variant="ghost"
                                                 size="icon"
