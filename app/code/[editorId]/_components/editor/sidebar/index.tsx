@@ -254,8 +254,8 @@ const FileExplorer = ({prompt,setPrompt,sendDatatoBackednLLM,serverFileType, new
 
   const handleDialogSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!newItemName || newItemName.length< 4) {
-      toast.error("Name should be atleast 4 characters long");
+    if (!newItemName || newItemName.length< 1) {
+      toast.error("Name should be atleast 1 character1 long");
       return;
     }
     if (dialogType === 'file') {
@@ -376,7 +376,7 @@ const FileExplorer = ({prompt,setPrompt,sendDatatoBackednLLM,serverFileType, new
               onChange={(e) => setNewItemName(e.target.value)}
               placeholder={dialogType === 'file' ? 'File name' : 'Folder name'}
               className="my-4"
-              minLength={4}
+              minLength={1}
               maxLength={10}
             />
             {
