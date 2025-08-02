@@ -116,6 +116,10 @@ const CodeEditor = () => {
         }
     };
 
+    const isPackageJsonFile = () => {
+        const currentFile = serverFiles.find((file) => file.id === activeId);
+        return currentFile?.name === 'package.json';
+    }
 
     const sendDatatoBackednLLM = async () => {
         try {
@@ -356,7 +360,7 @@ const CodeEditor = () => {
                                         lineNumbers: 'on',
                                         glyphMargin: false,
                                         renderLineHighlight: 'line',
-                                        readOnly : false,
+                                        readOnly: isPackageJsonFile(),
                                         wrappingIndent: "indent",
                                         wordWrap: "wordWrapColumn",
 	                                    wordWrapColumn: 500,
