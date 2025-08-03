@@ -48,6 +48,8 @@ export default function DashboardProjects({
         return "/icons/file_type_html.svg";
       case "python":
         return "/project-icons/python.svg";
+      case "react-tailwind":
+        return "/project-icons/tailwindcss.svg";
       default:
         return "/icons/file_type_html.svg";
     }

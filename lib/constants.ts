@@ -3,6 +3,7 @@ export const fileExtensions = {
     "html-css": [".html", ".css"],
     "html-css-js": [".html", ".css", ".js"],
     "python": [".py"],
+    "react-tailwind": [".jsx", ".css"],
     "node": [".js"],
     "more": [],
 }

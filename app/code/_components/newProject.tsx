@@ -39,7 +39,7 @@ import { toast } from "sonner";
 import { ulid } from 'ulid';
 import {  postRequest } from "@/lib/axios";
 
-type TOptions = "react" | "node" | "python" | "more" | "html-css" | "html-css-js";
+type TOptions = "react" | "node" | "python" | "more" | "html-css" | "html-css-js" | "react-tailwind";
 
 const data: {
   id: TOptions;
@@ -70,11 +70,18 @@ const data: {
     disabled: false,
   },
   {
+    id: "react-tailwind",
+    name: "React + Tailwind",
+    icon: "/project-icons/tailwindcss.svg",
+    description: "A Javascript library for building user interfaces",
+    disabled: false,
+  },
+  {
     id: "python",
     name: "Python",
     icon: "/project-icons/python.svg",
     description: "A high-level, general-purpose language, coming soon",
-    disabled: false,
+    disabled: true,
   },
   {
     id: "node",
@@ -142,7 +149,7 @@ export default function NewProjectModal({
       }
       await mutate({ data: virtualboxData });
       // router.push(`/code/${virtualboxData.virtualboxId}`);
-      toast.success("SandBox created");
+      toast.success("Virtualbox created");
     } catch (error) {
       toast.error("Failed to create board");
       console.error("Error:", error);
