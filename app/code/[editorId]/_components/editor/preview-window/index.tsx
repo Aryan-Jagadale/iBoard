@@ -32,39 +32,62 @@ export default function PreviewWindow({
 
     const runReactApp = async (data: any) => {
     try {
-        if (!data.indexHtml) {
-            throw new Error("index.html content missing in build data");
-        }
+        if (data?.virtualboxType === 'react-tailwind') {
+            if (!data.indexHtml) {
+                throw new Error("index.html content missing in build data");
+            }
 
-        console.log("Testing data:", data);
-        
+            console.log("Testing data:", data);
 
-        // Start with index.html from the build service
-        let html = data.indexHtml;
 
-        // Replace <div id="root"> content with an empty div for React to render into
-        html = html.replace(
-            /<div id="root">.*<\/div>/,
-            '<div id="root"></div>'
-        );
+            // Start with index.html from the build service
+            let html = data.indexHtml;
 
-        // Inject CSS into <head>
-        html = html.replace(
-            '</head>',
-            `<style>${data?.cssFiles || ''}</style></head>`
-        );
+            // Replace <div id="root"> content with an empty div for React to render into
+            html = html.replace(
+                /<div id="root">.*<\/div>/,
+                '<div id="root"></div>'
+            );
 
-        // Inject React, ReactDOM, and bundled JS into <body>
-        html = html.replace(
-            '</body>',
-            `<script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+            // Inject CSS into <head>
+            html = html.replace(
+                '</head>',
+                `<style>${data?.cssFiles || ''}</style></head>`
+            );
+
+            // Inject React, ReactDOM, and bundled JS into <body>
+            html = html.replace(
+                '</body>',
+                `<script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
              <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
              <script type="module">${data?.bundle || ''}</script>
             </body>`
-        );
+            );
 
-        console.log('Generated srcDoc:', html); // For debugging
-        setSrcDoc(html);
+            console.log('Generated srcDoc:', html); // For debugging
+            setSrcDoc(html);
+
+        } else if (data?.virtualboxType === 'react') {
+            const reactAppHTML = `
+            <!DOCTYPE html>
+                <html lang="en">
+                <head>
+                    <meta charset="UTF-8">
+                    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+                    <title>React App Preview</title>
+                    <style>${data?.cssFiles}</style> 
+                </head>
+                <body>
+                    <div id="root"></div>
+                    <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+                    <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+                    <script type="module">${data?.bundle}</script>
+                </body>
+                </html>`;
+            setSrcDoc(reactAppHTML);
+
+        }
+        
     } catch (error) {
         console.error("Error running React app:", error);
         toast.error("Failed to run React app.");
