@@ -134,7 +134,7 @@ export default function PackageManager({ serverFileType,servervboxId,socketRef, 
                                         <TableCell>{pkg.name}</TableCell>
                                         <TableCell>{pkg.version}</TableCell>
                                         <TableCell>
-                                            {pkg.name !== "react" && pkg.name !== "react-dom" && (
+                                            { !["react","react-dom","tailwindcss","postcss","postcss-cli","autoprefixer","@tailwindcss/typography"].includes(pkg.name) && (
                                                 <Button
                                                     variant="ghost"
                                                     size="icon"

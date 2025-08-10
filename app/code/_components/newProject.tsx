@@ -108,7 +108,7 @@ const formSchema = z.object({
       (value) => /^[a-zA-Z0-9_ ]+$/.test(value),
       "Name can contain letters, numbers, underscores, and spaces"
     ),
-  visibility: z.enum(["public", "private"]),
+  visibility: z.enum(["public", "private"]).default("public"),
 });
 
 export default function NewProjectModal({
@@ -210,7 +210,7 @@ export default function NewProjectModal({
                 </FormItem>
               )}
             />
-            <FormField
+            {/* <FormField
               control={form.control}
               name="visibility"
               render={({ field }) => (
@@ -234,7 +234,7 @@ export default function NewProjectModal({
                   <FormMessage />
                 </FormItem>
               )}
-            />
+            /> */}
                             
             <Button variant={"secondary"}  disabled={loading} type="submit" className="w-full">
               {loading ? (

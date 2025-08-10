@@ -146,11 +146,11 @@ export default function EditorTerminal({ files, type,servervboxId }: { files: an
   }, [servervboxId,isInputMode]);
 
   return (
-    <div className="w-full bg-zinc-900 overflow-hidden">
+    <div className="w-full bg-zinc-900 overflow-hidden h-full">
       <div className="w-full h-8 bg-zinc-800 flex items-center justify-between px-4">
         <span className="text-zinc-400 text-sm">Terminal</span>
       </div>
-      <div ref={terminalRef} className="w-full h-96 p-2" />
+      <div ref={terminalRef} className="w-full p-2 h-full" />
     </div>
   );
 }
