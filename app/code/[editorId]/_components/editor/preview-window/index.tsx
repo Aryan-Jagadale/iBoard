@@ -30,17 +30,48 @@ export default function PreviewWindow({
     const [srcDoc, setSrcDoc] = useState<string>("");
     const socketRef = useRef<Socket | null>(null);
 
-    const runReactApp = async (data:any) => {
-        try {
-            let styleTag = document.querySelector("#dynamic-style");
-            if (!styleTag) {
-                styleTag = document.createElement("style");
-                styleTag.id = "dynamic-style";
-                document.head.appendChild(styleTag);
+    const runReactApp = async (data: any) => {
+    try {
+        if (data?.virtualboxType === 'react-tailwind') {
+            if (!data.indexHtml) {
+                throw new Error("index.html content missing in build data");
             }
-            styleTag.innerHTML = data?.cssFiles;
 
-            console.log("Running React app...",data);       
+            console.log("Testing data:", data);
+
+
+            // Start with index.html from the build service
+            let html = data.indexHtml;
+
+            // Replace <div id="root"> content with an empty div for React to render into
+            html = html.replace(
+                /<div id="root">.*<\/div>/,
+                '<div id="root"></div>'
+            );
+
+            // Inject CSS into <head>
+            html = html.replace(
+                '</head>',
+                `<style>${data?.cssFiles || ''}</style></head>`
+            );
+
+            // Inject React, ReactDOM, and bundled JS into <body>
+            html = html.replace(
+                '</body>',
+                `<script src="https://unpkg.com/react@18/umd/react.production.min.js"
+                  integrity="sha384-6jL1rR/+qvOB0fOkH1ZZ1xd6QbaO5jM90+hCbGyF/F7fs/3Gzdh0dX8GkODdgqTi"
+                  crossorigin="anonymous"></script>
+             <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"
+                  integrity="sha384-+2c+hJ1ytY1/6V2vNh+lX6YsJhBKt3vnDnN/SUXOc6Bx/OVCkXbkqVKgf/mBlC9F"
+                  crossorigin="anonymous"></script>
+             <script type="module">${data?.bundle || ''}</script>
+            </body>`
+            );
+
+            console.log('Generated srcDoc:', html); // For debugging
+            setSrcDoc(html);
+
+        } else if (data?.virtualboxType === 'react') {
             const reactAppHTML = `
             <!DOCTYPE html>
                 <html lang="en">
@@ -59,11 +90,13 @@ export default function PreviewWindow({
                 </html>`;
             setSrcDoc(reactAppHTML);
 
-        } catch (error) {
-            console.error("Error running React app:", error);
-            toast.error("Failed to run React app.");
         }
-    };
+        
+    } catch (error) {
+        console.error("Error running React app:", error);
+        toast.error("Failed to run React app.");
+    }
+};
 
     useEffect(() => {
         socketRef.current = io(process.env.NEXT_PUBLIC_BUILD_SOCKET_URL);

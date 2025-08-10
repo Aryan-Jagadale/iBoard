@@ -329,7 +329,7 @@ const FileExplorer = ({prompt,setPrompt,sendDatatoBackednLLM,serverFileType, new
       </div>
 
       {
-        serverFileType === 'react' && (
+        ['react','react-tailwind'].includes(serverFileType) && (
           <div className='pt-4'>
             <PackageManager serverFileType={serverFileType} servervboxId={servervboxId} socketRef={socketRef} newPackages={newPackages} setNewPackages={setNewPackages} serverFiles={data} setServerFiles={setData}/>
           </div>

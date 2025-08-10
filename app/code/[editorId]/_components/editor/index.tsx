@@ -13,7 +13,10 @@ import Tab from "@/components/ui/tab";
 import { cleanSanitizeContent, processFileType, truncateContent } from '@/lib/utils';
 import PreviewWindow from './preview-window';
 import { getVirualBoxRequest } from '@/lib/axios';
-import EditorTerminal from './terminal';
+import dynamic from 'next/dynamic';
+const EditorTerminal = dynamic(() => import('./terminal'), {
+    ssr: false // Disable server-side rendering
+});
 import { io, Socket } from "socket.io-client";
 import { useDebounce } from '@/hooks/useDebounce';
 import { draculaTheme } from '@/lib/dracula-theme';
@@ -387,7 +390,7 @@ const CodeEditor = () => {
                         />
                         </ResizablePanel>
                         <ResizableHandle />
-                        <ResizablePanel defaultSize={50} minSize={10} className="p-2 flex flex-col">
+                        <ResizablePanel defaultSize={50} maxSize={55} minSize={10} className="p-2 flex flex-col">
                             <div className='w-full relative grow h-full overflow-hidden rounded-lg bg-secondary'>
                                 <EditorTerminal files={serverFiles} type={serverFileType} servervboxId={servervboxId}/>
                             </div>

@@ -53,7 +53,7 @@ const Navbar = ({ showSearch = false }) => {
         >
           <Image src={Logo} alt="Logo" width={36} height={36} />
         </Link>
-        <div className="text-sm font-medium flex items-center">Sandbox</div>
+        <div className="text-sm font-medium flex items-center">Virtualbox</div>
       </div>
       {showSearch && (
         <div className="flex items-center space-x-4">

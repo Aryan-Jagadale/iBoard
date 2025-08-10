@@ -41,6 +41,7 @@ export default defineSchema({
         v.literal("html-css"),
         v.literal("python"),
         v.literal("html-css-js"),
+        v.literal("react-tailwind")
       ),
       visibility: v.optional(v.union(
         v.literal("public"),
