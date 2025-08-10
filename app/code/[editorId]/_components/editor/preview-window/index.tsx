@@ -58,8 +58,12 @@ export default function PreviewWindow({
             // Inject React, ReactDOM, and bundled JS into <body>
             html = html.replace(
                 '</body>',
-                `<script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
-             <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+                `<script src="https://unpkg.com/react@18/umd/react.production.min.js"
+                  integrity="sha384-6jL1rR/+qvOB0fOkH1ZZ1xd6QbaO5jM90+hCbGyF/F7fs/3Gzdh0dX8GkODdgqTi"
+                  crossorigin="anonymous"></script>
+             <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"
+                  integrity="sha384-+2c+hJ1ytY1/6V2vNh+lX6YsJhBKt3vnDnN/SUXOc6Bx/OVCkXbkqVKgf/mBlC9F"
+                  crossorigin="anonymous"></script>
              <script type="module">${data?.bundle || ''}</script>
             </body>`
             );
