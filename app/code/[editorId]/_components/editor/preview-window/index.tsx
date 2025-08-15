@@ -5,7 +5,9 @@ import { toast } from "sonner";
 import { Link, RotateCw } from "lucide-react";
 import { io, Socket } from "socket.io-client";
 import { saveBuildToIndexedDB } from "@/lib/db";
-import { getBuildLink } from "@/lib/axios";
+import { useMutation, useQuery } from "convex/react";
+import { api } from "@/convex/_generated/api";
+import { reactAppHTML, tailwindReactAppHTML } from "@/lib/react-syntax";
 
 
 export default function PreviewWindow({
@@ -29,6 +31,7 @@ export default function PreviewWindow({
     const [iframeKey, setIframeKey] = useState(0);
     const [srcDoc, setSrcDoc] = useState<string>("");
     const socketRef = useRef<Socket | null>(null);
+    const storePreview = useMutation(api.virtualBoxes.storePreview);
 
     const runReactApp = async (data: any) => {
     try {
@@ -39,56 +42,27 @@ export default function PreviewWindow({
 
             console.log("Testing data:", data);
 
+            const htmlTailwindReact = tailwindReactAppHTML(data)
 
-            // Start with index.html from the build service
-            let html = data.indexHtml;
-
-            // Replace <div id="root"> content with an empty div for React to render into
-            html = html.replace(
-                /<div id="root">.*<\/div>/,
-                '<div id="root"></div>'
-            );
-
-            // Inject CSS into <head>
-            html = html.replace(
-                '</head>',
-                `<style>${data?.cssFiles || ''}</style></head>`
-            );
-
-            // Inject React, ReactDOM, and bundled JS into <body>
-            html = html.replace(
-                '</body>',
-                `<script src="https://unpkg.com/react@18/umd/react.production.min.js"
-                  integrity="sha384-6jL1rR/+qvOB0fOkH1ZZ1xd6QbaO5jM90+hCbGyF/F7fs/3Gzdh0dX8GkODdgqTi"
-                  crossorigin="anonymous"></script>
-             <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"
-                  integrity="sha384-+2c+hJ1ytY1/6V2vNh+lX6YsJhBKt3vnDnN/SUXOc6Bx/OVCkXbkqVKgf/mBlC9F"
-                  crossorigin="anonymous"></script>
-             <script type="module">${data?.bundle || ''}</script>
-            </body>`
-            );
-
-            console.log('Generated srcDoc:', html); // For debugging
-            setSrcDoc(html);
-
+            await storePreview({
+                vbId: data.vbId,
+                indexHtml: data.indexHtml,
+                bundle: data.bundle,  // ensure this is not undefined
+                cssFiles: data.cssFiles,
+                virtualboxType: data.virtualboxType
+            });
+            setSrcDoc(htmlTailwindReact);
         } else if (data?.virtualboxType === 'react') {
-            const reactAppHTML = `
-            <!DOCTYPE html>
-                <html lang="en">
-                <head>
-                    <meta charset="UTF-8">
-                    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-                    <title>React App Preview</title>
-                    <style>${data?.cssFiles}</style> 
-                </head>
-                <body>
-                    <div id="root"></div>
-                    <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
-                    <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
-                    <script type="module">${data?.bundle}</script>
-                </body>
-                </html>`;
-            setSrcDoc(reactAppHTML);
+            let reactHTML  = reactAppHTML(data);
+            await storePreview({
+                vbId: data.vbId,
+                indexHtml: data.indexHtml,
+                bundle: data.bundle,  // ensure this is not undefined
+                cssFiles: data.cssFiles,
+                virtualboxType: data.virtualboxType
+            });
+
+            setSrcDoc(reactHTML);
 
         }
         
@@ -180,7 +154,7 @@ export default function PreviewWindow({
                     <div className="flex space-x-1 translate-x-1">
                         <PreviewButton
                             onClick={() => {
-                                navigator.clipboard.writeText(`http://localhost:5173`);
+                                navigator.clipboard.writeText(`${window.location.origin}/code/${servervboxId}/preview`);
                                 toast.info("Copied preview link to clipboard");
                             }}
                         >

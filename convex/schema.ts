@@ -59,6 +59,15 @@ export default defineSchema({
     })
     .index("user_links", ["authorId"])
     .index("virtualbox_links", ["virtualboxId"])
-    .index("user_virtualbox_link", ["authorId", "virtualboxId"])
+    .index("user_virtualbox_link", ["authorId", "virtualboxId"]),
+
+    previews: defineTable({
+      vbId: v.string(),
+      indexHtml: v.string(),
+      bundle: v.string(),
+      cssFiles: v.string(),
+      virtualboxType:v.string(),
+      timestamp: v.number(),
+  }).index("by_vbId", ["vbId"]),
 
 });
