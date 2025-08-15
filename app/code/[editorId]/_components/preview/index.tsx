@@ -16,18 +16,21 @@ const PreviewScreen = () => {
     });
 
     useEffect(() => {
-        if (!previewResponse) return;
-
-        console.log("Preview response:", previewResponse);
+        if (!previewResponse) {
+            setSrcDoc("<h1>Project not found</h1>");
+            return;
+        };
 
         if (previewResponse.virtualboxType === 'react-tailwind') {
             if (!previewResponse.indexHtml) {
                 console.error("index.html content missing in build data");
                 return;
             }
-
             const html = tailwindReactAppHTML(previewResponse)
             setSrcDoc(html);
+            return;
+        }else if(previewResponse.virtualboxType === "html-css-js" || previewResponse.virtualboxType === "html-css") {
+            setSrcDoc(previewResponse.indexHtml ?? "<h1>Start typing in editor...</h1>");
             return;
         }
         const htmlReactAppHTML = reactAppHTML(previewResponse);

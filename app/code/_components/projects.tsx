@@ -16,6 +16,8 @@ export default function DashboardProjects({
   q: string | null;
 }) {
   const { mutate, pending }  = useApiMutation(api.virtualBoxes.deleteVirtualbox);
+  const { mutate:deleteMutate }  = useApiMutation(api.virtualBoxes.deletePreview);
+
   const update  = useApiMutation(api.virtualBoxes.updateVirtualbox);
   
   const onDelete = async (virtualbox: any) => {
@@ -25,6 +27,7 @@ export default function DashboardProjects({
     }
     
     await mutate({id: virtualbox._id});
+    await deleteMutate({vbId: virtualbox.virtualboxId});
     toast(`Project ${virtualbox.name} deleted.`);
   };
 

@@ -8,6 +8,7 @@ import { saveBuildToIndexedDB } from "@/lib/db";
 import { useMutation, useQuery } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import { reactAppHTML, tailwindReactAppHTML } from "@/lib/react-syntax";
+import { htmlCSSJSSyntax } from "@/lib/html-css-js-sytax";
 
 
 export default function PreviewWindow({
@@ -101,50 +102,24 @@ export default function PreviewWindow({
     }, [iframeKey,servervboxId]);
 
     useEffect(() => {
-        if (type === "html-css" || type === "html-css-js") {
-            const htmlFile = files.find((file) => file.name === "index.html");
-            const cssFile = files.find((file) => file.name === "style.css");
-            const jsFiles = files.filter((file) => file.name.endsWith(".js"));
+        const updatePreview = async () => {
+            if (type === "html-css" || type === "html-css-js") {
+                const combinedHTML = htmlCSSJSSyntax(files);
 
-            if (htmlFile && cssFile) {
-                let combinedHTML = htmlFile.content.replace(
-                    "</head>",
-                    `<style>${cssFile.content}</style></head>`
-                );
-                const loggingScript = `
-            <script>
-                (function() {
-                    const methods = ['log', 'error', 'warn', 'info'];
-                    methods.forEach((method) => {
-                        const original = console[method];
-                        console[method] = function(...args) {
-                            window.parent.postMessage({ type: 'console', method, data: args }, '*');
-                            original.apply(console, args);
-                        };
-                    });
-                })();
-            </script>
-        `;
-                combinedHTML = combinedHTML.replace("</head>", `${loggingScript}</head>`);
-
-                if (jsFiles.length > 0) {
-                    const scriptTags = jsFiles
-                        .map((jsFile) => {
-                            const isModule = jsFile.name.endsWith(".module.js");
-                            return `<script ${
-                                isModule ? "type='module'" : ""
-                            } data-filename="${jsFile.name}">
-                                    ${jsFile.content}
-                                   </script>`;
-                        })
-                        .join("\n");
-                    combinedHTML = combinedHTML.replace("</body>", `${scriptTags}\n</body>`);
-                }
-
+                await storePreview({
+                    vbId: servervboxId,
+                    indexHtml: combinedHTML,
+                    bundle: "",  // ensure this is not undefined
+                    cssFiles: "",
+                    virtualboxType: type
+                });
+                
                 setSrcDoc(combinedHTML);
             }
-        }
-    }, [files, type,newPackages]);
+        };
+        
+        updatePreview();
+    }, [files, type, newPackages, storePreview, servervboxId]);
 
     return (
         <>

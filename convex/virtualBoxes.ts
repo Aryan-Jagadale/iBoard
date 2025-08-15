@@ -150,3 +150,18 @@ export const getPreview = query({
       .first();
   },
 });
+
+export const deletePreview = mutation({
+  args: { vbId: v.string() },
+  handler: async (ctx, args) => {
+    const { db } = ctx;
+    const existing = await db
+      .query("previews")
+      .withIndex("by_vbId", (q) => q.eq("vbId", args.vbId))
+      .first();
+
+    if (existing) {
+      await db.delete(existing._id);
+    }
+  },
+});
