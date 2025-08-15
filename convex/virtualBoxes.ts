@@ -101,3 +101,52 @@ export const deleteVirtualbox = mutation({
   },
 
 });
+
+//Previews
+export const storePreview = mutation({
+  args: {
+    vbId: v.optional(v.string()),
+    indexHtml: v.optional(v.string()),
+    bundle: v.optional(v.string()),
+    cssFiles: v.optional(v.string()),
+    virtualboxType: v.optional(v.string()),
+  },
+  handler: async (ctx, args) => {
+    const { db } = ctx;
+    const existing = await db
+      .query("previews")
+      .withIndex("by_vbId", (q) => q.eq("vbId", args.vbId ?? ""))
+      .first();
+    
+    if (existing) {
+      await db.patch(existing._id, {
+        indexHtml: args.indexHtml,
+        bundle: args.bundle ?? "",
+        cssFiles: args.cssFiles,
+        virtualboxType:args.virtualboxType,
+        timestamp: Date.now(),
+      });
+    } else {
+      await db.insert("previews", {
+        vbId: args.vbId ?? "",
+        indexHtml: args.indexHtml ?? "",
+        bundle: args.bundle ?? "",
+        virtualboxType:args.virtualboxType ?? "",
+        cssFiles: args.cssFiles ?? "",
+        timestamp: Date.now(),
+      });
+    }
+  },
+});
+
+
+export const getPreview = query({
+  args: { vbId: v.string() },
+  handler: async (ctx, args) => {
+    const { db } = ctx;
+    return await db
+      .query("previews")
+      .withIndex("by_vbId", (q) => q.eq("vbId", args.vbId))
+      .first();
+  },
+});
