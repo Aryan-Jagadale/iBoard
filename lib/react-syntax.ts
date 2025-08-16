@@ -1,4 +1,12 @@
+import pako from 'pako';
+
 export const reactAppHTML = (data:any) =>{
+    let bundle: string;
+    if (data?.isCompressed) {
+        bundle = pako.ungzip(data?.bundle, { to: 'string' });
+    }else{
+        bundle = data.bundle;
+    }
     const reactAppHTML = `
             <!DOCTYPE html>
                 <html lang="en">
@@ -12,7 +20,7 @@ export const reactAppHTML = (data:any) =>{
                     <div id="root"></div>
                     <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
                     <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
-                    <script type="module">${data?.bundle}</script>
+                    <script type="module">${bundle}</script>
                 </body>
                 </html>`;
     return reactAppHTML;

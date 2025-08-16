@@ -60,7 +60,8 @@ export default function PreviewWindow({
                 indexHtml: data.indexHtml,
                 bundle: data.bundle,  // ensure this is not undefined
                 cssFiles: data.cssFiles,
-                virtualboxType: data.virtualboxType
+                virtualboxType: data.virtualboxType,
+                isCompressed: data.isCompressed
             });
 
             setSrcDoc(reactHTML);
@@ -109,7 +110,7 @@ export default function PreviewWindow({
                 await storePreview({
                     vbId: servervboxId,
                     indexHtml: combinedHTML,
-                    bundle: "",  // ensure this is not undefined
+
                     cssFiles: "",
                     virtualboxType: type
                 });
