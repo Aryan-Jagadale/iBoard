@@ -126,6 +126,7 @@ export const storePreview = mutation({
         cssFiles: args.cssFiles,
         virtualboxType:args.virtualboxType,
         timestamp: Date.now(),
+        isCompressed: args.isCompressed ?? false,
       });
     } else {
       await db.insert("previews", {
@@ -135,6 +136,7 @@ export const storePreview = mutation({
         virtualboxType:args.virtualboxType ?? "",
         cssFiles: args.cssFiles ?? "",
         timestamp: Date.now(),
+        isCompressed: args.isCompressed ?? false,
       });
     }
   },

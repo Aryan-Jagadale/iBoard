@@ -41,8 +41,6 @@ export default function PreviewWindow({
                 throw new Error("index.html content missing in build data");
             }
 
-            console.log("Testing data:", data);
-
             const htmlTailwindReact = tailwindReactAppHTML(data)
 
             await storePreview({
@@ -50,7 +48,8 @@ export default function PreviewWindow({
                 indexHtml: data.indexHtml,
                 bundle: data.bundle,  // ensure this is not undefined
                 cssFiles: data.cssFiles,
-                virtualboxType: data.virtualboxType
+                virtualboxType: data.virtualboxType,
+                isCompressed: data.isCompressed
             });
             setSrcDoc(htmlTailwindReact);
         } else if (data?.virtualboxType === 'react') {

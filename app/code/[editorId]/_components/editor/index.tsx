@@ -169,21 +169,26 @@ const CodeEditor = () => {
             fileName,
             virtualboxType: serverFileType,
         });
-    }, { delay: 20000 });
+    }, { delay: 10000 });
 
     const handleEditorChange = (value: string | undefined) => {
         if (activeId && value !== undefined) {
-            const {bucketPath,name} = serverFiles.find((file) => file.id === activeId);
-            debouncedFileUpdate(activeId, value, servervboxId,bucketPath,name);
-            socketRef.current?.on("fileUpdatedBroadcast", (data) => {
-                const updatedFiles:any[] = serverFiles.map((fileOrFolder:any) => {
-                    if (fileOrFolder.id === data.fileId) {
-                        return { ...fileOrFolder, content: data.content, saved: true };
-                    }
-                    return fileOrFolder;
-                });
-                setServerFiles(updatedFiles);
-            });
+            const file = serverFiles.find((file) => file.id === activeId);
+            if (!file) {
+                console.error("File not found for activeId:", activeId);
+                toast.error("Cannot update: File not found");
+                return;
+            }
+            // Mark tab as unsaved if content differs
+            setTabs((prev) =>
+                prev.map((tab) =>
+                    tab.id === activeId
+                        ? { ...tab, saved: value === activeFile }
+                        : tab
+                )
+            );
+            // Trigger debounced update
+            debouncedFileUpdate(activeId, value, servervboxId, file.bucketPath, file.name);
         }
     };
 
@@ -196,6 +201,34 @@ const CodeEditor = () => {
           },
         ]);
     };
+
+    useEffect(() => {
+        if (!socketRef.current) return;
+
+        const handleFileUpdatedBroadcast = (data: { fileId: string; content: string }) => {
+            console.log("Received fileUpdatedBroadcast:", data); // Debug log
+            const updatedFiles = serverFiles.map((file) => {
+                if (file.id === data.fileId) {
+                    return { ...file, content: data.content, saved: true };
+                }
+                return file;
+            });
+            setServerFiles(updatedFiles);
+            // Update activeFile if the updated file is active
+            if (data.fileId === activeId) {
+                setActiveFile(data.content);
+                setTabs((prev) =>
+                    prev.map((tab) =>
+                        tab.id === activeId ? { ...tab, saved: true } : tab
+                    )
+                );
+            }
+        };
+        socketRef.current.on("fileUpdatedBroadcast", handleFileUpdatedBroadcast);
+        return () => {
+            socketRef.current?.off("fileUpdatedBroadcast", handleFileUpdatedBroadcast);
+        };
+    }, [serverFiles, activeId, activeFile]);
     
 
     useEffect(() => {
