@@ -310,7 +310,7 @@ const CodeEditor = () => {
                     <Sidebar prompt={prompt} setPrompt={setPrompt} sendDatatoBackednLLM={sendDatatoBackednLLM} serverFileType={serverFileType} newPackages={newPackages} setNewPackages={setNewPackages}  data={serverFiles} setData={setServerFiles} socketRef={socketRef} servervboxId={servervboxId} selectFile={selectFile} activeId={activeId}/>
 
                 </ResizablePanel>
-                <ResizableHandle />
+                <ResizableHandle withHandle />
 
                 <ResizablePanel
                     maxSize={80}
