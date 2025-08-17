@@ -17,7 +17,7 @@ const PreviewScreen = () => {
 
     useEffect(() => {
         if (!previewResponse) {
-            setSrcDoc("<h1>Project not found</h1>");
+            setSrcDoc("<h1>Loading....</h1>");
             return;
         };
 

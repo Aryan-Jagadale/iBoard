@@ -1,5 +1,6 @@
 "use client";
 import Editor, { BeforeMount,OnMount } from '@monaco-editor/react';
+import * as monacoTypes from "monaco-editor";
 import {
     ResizableHandle,
     ResizablePanel,
@@ -27,6 +28,7 @@ import { AiSuggestionModal } from './ai-suggestion-modal';
 
 const CodeEditor = () => {
     const editorRef = useRef<null | monaco.editor.IStandaloneCodeEditor>(null);
+    const monacoRef = useRef<typeof monacoTypes | null>(null);
     const editorContainerRef = useRef<HTMLDivElement>(null);
 
     const [editorLanguage, setEditorLanguage] = useState<string | undefined>(
@@ -54,6 +56,7 @@ const CodeEditor = () => {
 
     const handleEditorMount: OnMount = (editor, monaco) => {
         editorRef.current = editor;
+        monacoRef.current = monaco;
 
         editor.onDidChangeCursorSelection((e) => {
             const selection = editor.getSelection();
@@ -74,6 +77,12 @@ const CodeEditor = () => {
                 setSelectedData(newSelectionData);
             }
         });
+
+        window.addEventListener("keydown", (e) => {
+            if ((e.ctrlKey || e.metaKey) && e.key === "s") {
+                e.preventDefault();
+            }
+        });
     };
 
     const selectFile = (tab: any) => {
@@ -84,7 +93,7 @@ const CodeEditor = () => {
                 setActiveId(exists.id);
                 return prev;
             }
-            return [...prev, tab];
+            return [...prev, {...tab,saved:true}];
         });
 
         setEditorLanguage(processFileType(tab.name));
@@ -161,6 +170,8 @@ const CodeEditor = () => {
     }
 
     const debouncedFileUpdate = useDebounce((fileId: string, content: string,virtualboxId:string,bucketPath:string,fileName:string) => {
+        console.log("Debounced file update:");
+        
         socketRef.current?.emit("fileUpdate", {
             fileId,
             content,
@@ -169,28 +180,8 @@ const CodeEditor = () => {
             fileName,
             virtualboxType: serverFileType,
         });
-    }, { delay: 10000 });
+    }, { delay: 1000 });
 
-    const handleEditorChange = (value: string | undefined) => {
-        if (activeId && value !== undefined) {
-            const file = serverFiles.find((file) => file.id === activeId);
-            if (!file) {
-                console.error("File not found for activeId:", activeId);
-                toast.error("Cannot update: File not found");
-                return;
-            }
-            // Mark tab as unsaved if content differs
-            setTabs((prev) =>
-                prev.map((tab) =>
-                    tab.id === activeId
-                        ? { ...tab, saved: value === activeFile }
-                        : tab
-                )
-            );
-            // Trigger debounced update
-            debouncedFileUpdate(activeId, value, servervboxId, file.bucketPath, file.name);
-        }
-    };
 
     const handleEditorWillMount: BeforeMount = (monaco) => {
         monaco.editor.defineTheme('dracula', draculaTheme);
@@ -229,6 +220,41 @@ const CodeEditor = () => {
             socketRef.current?.off("fileUpdatedBroadcast", handleFileUpdatedBroadcast);
         };
     }, [serverFiles, activeId, activeFile]);
+
+    useEffect(() => {
+
+        if (!editorRef.current || !monacoRef.current) return;
+        const editor = editorRef.current;
+        const monaco = monacoRef.current;
+        editor.addCommand(monaco?.KeyMod.CtrlCmd | monaco?.KeyCode.KeyS, () => {
+            const value = editor.getValue();
+            console.log("tabs", tabs);
+            console.log("Active ID:", activeId);
+            console.log("Server VBox ID:", servervboxId);
+            if (activeId && servervboxId) {
+                const file = serverFiles.find((file) => file.id === activeId);
+                console.log("File:", file);
+
+                if (!file) {
+                    console.error("File not found for activeId:", activeId);
+                    toast.error("Cannot save: File not found");
+                    return;
+                }
+                console.log("value", value);
+
+                debouncedFileUpdate(activeId, value, servervboxId, file.bucketPath, file.name);
+                setTabs((prev) =>
+                    prev.map((tab) =>
+                        tab.id === activeId ? { ...tab, saved: true } : tab
+                    )
+                );
+            } else {
+                console.error("Active ID or server VBox ID is not set.");
+            }
+        });
+
+    }, [tabs, activeId, servervboxId])
+    
     
 
     useEffect(() => {
@@ -322,7 +348,7 @@ const CodeEditor = () => {
                         {tabs.map((tab) => (
                             <Tab
                                 key={tab.id}
-                                saved={true}
+                                saved={tab.saved}
                                 onClick={() => selectFile(tab)}
                                 selected={activeId === tab.id}
                                 onClose={() => closeTab(tab.id)}
@@ -352,7 +378,6 @@ const CodeEditor = () => {
                                     onMount={handleEditorMount}
                                     beforeMount={handleEditorWillMount}
                                     onChange={(value) => {
-                                        handleEditorChange(value)
                                         if (value === activeFile) {
                                           setTabs((prev) =>
                                             prev.map((tab) =>
@@ -405,7 +430,7 @@ const CodeEditor = () => {
                     </div>
 
                 </ResizablePanel>
-                <ResizableHandle />
+                <ResizableHandle withHandle />
                 <ResizablePanel defaultSize={40}>
                     <ResizablePanelGroup direction="vertical">
                         <ResizablePanel defaultSize={50} minSize={20} collapsedSize={4} collapsible  className="p-2 flex flex-col">

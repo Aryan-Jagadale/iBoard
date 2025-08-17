@@ -91,7 +91,7 @@ export default function PreviewWindow({
                 console.log("Received data:", data);
                 runReactApp(data);
                 console.log("No build found in indexedDB, saving new build");
-                await saveBuildToIndexedDB(data?.vbId, data?.bundle, data?.cssFiles); 
+                // await saveBuildToIndexedDB(data?.vbId, data?.bundle, data?.cssFiles); 
             }
         })
 
@@ -109,9 +109,10 @@ export default function PreviewWindow({
                 await storePreview({
                     vbId: servervboxId,
                     indexHtml: combinedHTML,
-
+                    bundle: new ArrayBuffer(0),
                     cssFiles: "",
-                    virtualboxType: type
+                    virtualboxType: type,
+                    isCompressed: false
                 });
                 
                 setSrcDoc(combinedHTML);
