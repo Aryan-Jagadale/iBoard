@@ -86,6 +86,10 @@ const CodeEditor = () => {
     };
 
     const selectFile = (tab: any) => {
+        if (isPkgJson(tab.id)) {
+            toast.error("Cannot edit package.json directly in the editor. Please use the package manager.");
+            return;
+        }
         if (tab.id === activeId) return;
         const exists = tabs.find((t) => t.id === tab.id);
         setTabs((prev) => {
@@ -102,6 +106,9 @@ const CodeEditor = () => {
             setActiveFile(file.content);
         }
         setActiveId(tab.id);
+    };
+    const isPkgJson = (id:any) => {
+        return id && serverFiles.some((file) => file.id === id && file.name === "package.json");
     };
 
     const closeTab = (id: string) => {

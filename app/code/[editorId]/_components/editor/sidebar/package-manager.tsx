@@ -37,7 +37,7 @@ export default function PackageManager({ serverFileType,servervboxId,socketRef, 
             fileName,
             virtualboxType:serverFileType
         });
-    }, { delay: 10000 });
+    }, { delay: 5000 });
 
     useEffect(() => {
         debouncedFetchSuggestions();
@@ -114,7 +114,7 @@ export default function PackageManager({ serverFileType,servervboxId,socketRef, 
                     <Button style={{
                         borderRadius: "0rem",
                         border:"1px solid grey",
-                    }} className="bg-transparent w-full" variant="ghost">Add npm Packages</Button>
+                    }} className="bg-transparent w-full" variant="ghost">Package Manager</Button>
                 </DrawerTrigger>
                 <DrawerContent>
                     <DrawerHeader>
@@ -139,7 +139,7 @@ export default function PackageManager({ serverFileType,servervboxId,socketRef, 
                                                     variant="ghost"
                                                     size="icon"
                                                     onClick={() => handleDeletePackage(pkg.name)}
-                                                    className="h-8 w-8 text-destructive hover:text-destructive/90 hover:bg-destructive/10"
+                                                    className="h-8 w-8  hover:text-destructive/90 hover:bg-destructive/10"
                                                 >
                                                     <Trash2 className="h-4 w-4" />
                                                     <span className="sr-only">Delete {pkg.name}</span>
