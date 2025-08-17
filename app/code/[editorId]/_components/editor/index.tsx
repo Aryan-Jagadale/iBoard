@@ -38,7 +38,7 @@ const CodeEditor = () => {
     const [activeId, setActiveId] = useState<string>("");
     const [tabs, setTabs] = useState<any[]>([]);
     const [serverFiles, setServerFiles] = useState<any[]>([]);
-    const [serverFileType, setServerFileType] = useState<"react" | "html-css" | "html-css-js">("react");
+    const [serverFileType, setServerFileType] = useState<"react" | "html-css" | "html-css-js" | "react-tailwind">("react");
     const [servervboxId, setServerVboxId] = useState("");
     const [serverS3path, setServerS3path] = useState<any[]>([]);
     const socketRef = useRef<Socket | null>(null);
@@ -170,8 +170,7 @@ const CodeEditor = () => {
     }
 
     const debouncedFileUpdate = useDebounce((fileId: string, content: string,virtualboxId:string,bucketPath:string,fileName:string) => {
-        console.log("Debounced file update:");
-        
+   
         socketRef.current?.emit("fileUpdate", {
             fileId,
             content,
@@ -254,8 +253,6 @@ const CodeEditor = () => {
         });
 
     }, [tabs, activeId, servervboxId])
-    
-    
 
     useEffect(() => {
         socketRef.current = io(process.env.NEXT_PUBLIC_SOCKET_URL,{
