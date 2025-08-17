@@ -64,10 +64,11 @@ export default defineSchema({
     previews: defineTable({
       vbId: v.string(),
       indexHtml: v.string(),
-      bundle: v.string(),
+      bundle: v.optional(v.bytes()),
       cssFiles: v.string(),
       virtualboxType:v.string(),
       timestamp: v.number(),
+      isCompressed: v.optional(v.boolean()),
   }).index("by_vbId", ["vbId"]),
 
 });

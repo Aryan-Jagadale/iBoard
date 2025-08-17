@@ -60,14 +60,14 @@ const Navbar = ({ showSearch = false }) => {
           <DashboardNavbarSearch />
         </div>
       )}
-      {
+      {/* {
         !showSearch && (
           <Button onClick={handleSave} disabled={isSaving} variant={'outline'} className={`gap-2 border-green-500 text-green-500`}>
             <Cloud className="h-6 w-6" />
             {isSaving ? "Saving...!!!" : "Save to Cloud"}
           </Button>
         )
-      }
+      } */}
     </div>
   )
 }

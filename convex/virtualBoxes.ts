@@ -107,9 +107,10 @@ export const storePreview = mutation({
   args: {
     vbId: v.optional(v.string()),
     indexHtml: v.optional(v.string()),
-    bundle: v.optional(v.string()),
+    bundle: v.optional(v.bytes()),
     cssFiles: v.optional(v.string()),
     virtualboxType: v.optional(v.string()),
+    isCompressed: v.optional(v.boolean()),
   },
   handler: async (ctx, args) => {
     const { db } = ctx;
@@ -121,19 +122,21 @@ export const storePreview = mutation({
     if (existing) {
       await db.patch(existing._id, {
         indexHtml: args.indexHtml,
-        bundle: args.bundle ?? "",
+        bundle: args.bundle,
         cssFiles: args.cssFiles,
         virtualboxType:args.virtualboxType,
         timestamp: Date.now(),
+        isCompressed: args.isCompressed ?? false,
       });
     } else {
       await db.insert("previews", {
         vbId: args.vbId ?? "",
         indexHtml: args.indexHtml ?? "",
-        bundle: args.bundle ?? "",
+        bundle: args.bundle ?? new Uint8Array(),
         virtualboxType:args.virtualboxType ?? "",
         cssFiles: args.cssFiles ?? "",
         timestamp: Date.now(),
+        isCompressed: args.isCompressed ?? false,
       });
     }
   },

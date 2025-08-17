@@ -41,8 +41,6 @@ export default function PreviewWindow({
                 throw new Error("index.html content missing in build data");
             }
 
-            console.log("Testing data:", data);
-
             const htmlTailwindReact = tailwindReactAppHTML(data)
 
             await storePreview({
@@ -50,7 +48,8 @@ export default function PreviewWindow({
                 indexHtml: data.indexHtml,
                 bundle: data.bundle,  // ensure this is not undefined
                 cssFiles: data.cssFiles,
-                virtualboxType: data.virtualboxType
+                virtualboxType: data.virtualboxType,
+                isCompressed: data.isCompressed
             });
             setSrcDoc(htmlTailwindReact);
         } else if (data?.virtualboxType === 'react') {
@@ -60,7 +59,8 @@ export default function PreviewWindow({
                 indexHtml: data.indexHtml,
                 bundle: data.bundle,  // ensure this is not undefined
                 cssFiles: data.cssFiles,
-                virtualboxType: data.virtualboxType
+                virtualboxType: data.virtualboxType,
+                isCompressed: data.isCompressed
             });
 
             setSrcDoc(reactHTML);
@@ -91,7 +91,7 @@ export default function PreviewWindow({
                 console.log("Received data:", data);
                 runReactApp(data);
                 console.log("No build found in indexedDB, saving new build");
-                await saveBuildToIndexedDB(data?.vbId, data?.bundle, data?.cssFiles); 
+                // await saveBuildToIndexedDB(data?.vbId, data?.bundle, data?.cssFiles); 
             }
         })
 
@@ -109,9 +109,10 @@ export default function PreviewWindow({
                 await storePreview({
                     vbId: servervboxId,
                     indexHtml: combinedHTML,
-                    bundle: "",  // ensure this is not undefined
+                    bundle: new ArrayBuffer(0),
                     cssFiles: "",
-                    virtualboxType: type
+                    virtualboxType: type,
+                    isCompressed: false
                 });
                 
                 setSrcDoc(combinedHTML);

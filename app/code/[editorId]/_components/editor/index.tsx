@@ -1,5 +1,6 @@
 "use client";
 import Editor, { BeforeMount,OnMount } from '@monaco-editor/react';
+import * as monacoTypes from "monaco-editor";
 import {
     ResizableHandle,
     ResizablePanel,
@@ -27,6 +28,7 @@ import { AiSuggestionModal } from './ai-suggestion-modal';
 
 const CodeEditor = () => {
     const editorRef = useRef<null | monaco.editor.IStandaloneCodeEditor>(null);
+    const monacoRef = useRef<typeof monacoTypes | null>(null);
     const editorContainerRef = useRef<HTMLDivElement>(null);
 
     const [editorLanguage, setEditorLanguage] = useState<string | undefined>(
@@ -36,7 +38,7 @@ const CodeEditor = () => {
     const [activeId, setActiveId] = useState<string>("");
     const [tabs, setTabs] = useState<any[]>([]);
     const [serverFiles, setServerFiles] = useState<any[]>([]);
-    const [serverFileType, setServerFileType] = useState<"react" | "html-css" | "html-css-js">("react");
+    const [serverFileType, setServerFileType] = useState<"react" | "html-css" | "html-css-js" | "react-tailwind">("react");
     const [servervboxId, setServerVboxId] = useState("");
     const [serverS3path, setServerS3path] = useState<any[]>([]);
     const socketRef = useRef<Socket | null>(null);
@@ -54,6 +56,7 @@ const CodeEditor = () => {
 
     const handleEditorMount: OnMount = (editor, monaco) => {
         editorRef.current = editor;
+        monacoRef.current = monaco;
 
         editor.onDidChangeCursorSelection((e) => {
             const selection = editor.getSelection();
@@ -74,6 +77,12 @@ const CodeEditor = () => {
                 setSelectedData(newSelectionData);
             }
         });
+
+        window.addEventListener("keydown", (e) => {
+            if ((e.ctrlKey || e.metaKey) && e.key === "s") {
+                e.preventDefault();
+            }
+        });
     };
 
     const selectFile = (tab: any) => {
@@ -84,7 +93,7 @@ const CodeEditor = () => {
                 setActiveId(exists.id);
                 return prev;
             }
-            return [...prev, tab];
+            return [...prev, {...tab,saved:true}];
         });
 
         setEditorLanguage(processFileType(tab.name));
@@ -161,6 +170,7 @@ const CodeEditor = () => {
     }
 
     const debouncedFileUpdate = useDebounce((fileId: string, content: string,virtualboxId:string,bucketPath:string,fileName:string) => {
+   
         socketRef.current?.emit("fileUpdate", {
             fileId,
             content,
@@ -169,23 +179,8 @@ const CodeEditor = () => {
             fileName,
             virtualboxType: serverFileType,
         });
-    }, { delay: 20000 });
+    }, { delay: 1000 });
 
-    const handleEditorChange = (value: string | undefined) => {
-        if (activeId && value !== undefined) {
-            const {bucketPath,name} = serverFiles.find((file) => file.id === activeId);
-            debouncedFileUpdate(activeId, value, servervboxId,bucketPath,name);
-            socketRef.current?.on("fileUpdatedBroadcast", (data) => {
-                const updatedFiles:any[] = serverFiles.map((fileOrFolder:any) => {
-                    if (fileOrFolder.id === data.fileId) {
-                        return { ...fileOrFolder, content: data.content, saved: true };
-                    }
-                    return fileOrFolder;
-                });
-                setServerFiles(updatedFiles);
-            });
-        }
-    };
 
     const handleEditorWillMount: BeforeMount = (monaco) => {
         monaco.editor.defineTheme('dracula', draculaTheme);
@@ -196,7 +191,68 @@ const CodeEditor = () => {
           },
         ]);
     };
-    
+
+    useEffect(() => {
+        if (!socketRef.current) return;
+
+        const handleFileUpdatedBroadcast = (data: { fileId: string; content: string }) => {
+            console.log("Received fileUpdatedBroadcast:", data); // Debug log
+            const updatedFiles = serverFiles.map((file) => {
+                if (file.id === data.fileId) {
+                    return { ...file, content: data.content, saved: true };
+                }
+                return file;
+            });
+            setServerFiles(updatedFiles);
+            // Update activeFile if the updated file is active
+            if (data.fileId === activeId) {
+                setActiveFile(data.content);
+                setTabs((prev) =>
+                    prev.map((tab) =>
+                        tab.id === activeId ? { ...tab, saved: true } : tab
+                    )
+                );
+            }
+        };
+        socketRef.current.on("fileUpdatedBroadcast", handleFileUpdatedBroadcast);
+        return () => {
+            socketRef.current?.off("fileUpdatedBroadcast", handleFileUpdatedBroadcast);
+        };
+    }, [serverFiles, activeId, activeFile]);
+
+    useEffect(() => {
+
+        if (!editorRef.current || !monacoRef.current) return;
+        const editor = editorRef.current;
+        const monaco = monacoRef.current;
+        editor.addCommand(monaco?.KeyMod.CtrlCmd | monaco?.KeyCode.KeyS, () => {
+            const value = editor.getValue();
+            console.log("tabs", tabs);
+            console.log("Active ID:", activeId);
+            console.log("Server VBox ID:", servervboxId);
+            if (activeId && servervboxId) {
+                const file = serverFiles.find((file) => file.id === activeId);
+                console.log("File:", file);
+
+                if (!file) {
+                    console.error("File not found for activeId:", activeId);
+                    toast.error("Cannot save: File not found");
+                    return;
+                }
+                console.log("value", value);
+
+                debouncedFileUpdate(activeId, value, servervboxId, file.bucketPath, file.name);
+                setTabs((prev) =>
+                    prev.map((tab) =>
+                        tab.id === activeId ? { ...tab, saved: true } : tab
+                    )
+                );
+            } else {
+                console.error("Active ID or server VBox ID is not set.");
+            }
+        });
+
+    }, [tabs, activeId, servervboxId])
 
     useEffect(() => {
         socketRef.current = io(process.env.NEXT_PUBLIC_SOCKET_URL,{
@@ -277,7 +333,7 @@ const CodeEditor = () => {
                     <Sidebar prompt={prompt} setPrompt={setPrompt} sendDatatoBackednLLM={sendDatatoBackednLLM} serverFileType={serverFileType} newPackages={newPackages} setNewPackages={setNewPackages}  data={serverFiles} setData={setServerFiles} socketRef={socketRef} servervboxId={servervboxId} selectFile={selectFile} activeId={activeId}/>
 
                 </ResizablePanel>
-                <ResizableHandle />
+                <ResizableHandle withHandle />
 
                 <ResizablePanel
                     maxSize={80}
@@ -289,7 +345,7 @@ const CodeEditor = () => {
                         {tabs.map((tab) => (
                             <Tab
                                 key={tab.id}
-                                saved={true}
+                                saved={tab.saved}
                                 onClick={() => selectFile(tab)}
                                 selected={activeId === tab.id}
                                 onClose={() => closeTab(tab.id)}
@@ -319,7 +375,6 @@ const CodeEditor = () => {
                                     onMount={handleEditorMount}
                                     beforeMount={handleEditorWillMount}
                                     onChange={(value) => {
-                                        handleEditorChange(value)
                                         if (value === activeFile) {
                                           setTabs((prev) =>
                                             prev.map((tab) =>
@@ -372,7 +427,7 @@ const CodeEditor = () => {
                     </div>
 
                 </ResizablePanel>
-                <ResizableHandle />
+                <ResizableHandle withHandle />
                 <ResizablePanel defaultSize={40}>
                     <ResizablePanelGroup direction="vertical">
                         <ResizablePanel defaultSize={50} minSize={20} collapsedSize={4} collapsible  className="p-2 flex flex-col">
