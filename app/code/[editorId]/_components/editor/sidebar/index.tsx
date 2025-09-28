@@ -67,6 +67,7 @@ const FileTreeNode = ({ node, level = 0, onDelete, onRename, onAddFile, onAddFol
 
   const handleAddFolder = (e: React.MouseEvent) => {
     e.stopPropagation();
+    console.log("Add folder to",node.id);
     onAddFolder(node.id, 'New Folder');
   };
 
@@ -249,6 +250,8 @@ const FileExplorer = ({prompt,setPrompt,sendDatatoBackednLLM,serverFileType, new
       type: 'folder',
       children: []
     };
+    console.log("parentId",parentId);
+    
     addNode(parentId, newFolder);
   };
 
@@ -261,7 +264,7 @@ const FileExplorer = ({prompt,setPrompt,sendDatatoBackednLLM,serverFileType, new
     if (dialogType === 'file') {
       handleAddFile(null, `${newItemName}${fileExtension}`);
     } else if (dialogType === 'folder') {
-      handleAddFolder(null, `${newItemName}${fileExtension}`);
+      handleAddFolder(null, `${newItemName}`);
     }
     setDialogType(null);
     setNewItemName("");
@@ -287,6 +290,9 @@ const FileExplorer = ({prompt,setPrompt,sendDatatoBackednLLM,serverFileType, new
   }
   ,[serverFileType]);
 
+  console.log("Data in file explorer:",JSON.stringify(data));
+  
+
   return (
     <div className="px-2 rounded shadow">
       <div className="my-3 space-x-2 cursor-pointer flex items-center justify-end gap-1">
@@ -296,8 +302,8 @@ const FileExplorer = ({prompt,setPrompt,sendDatatoBackednLLM,serverFileType, new
           </div>
         </Hint>
         <Hint label={'Add folder'} side="top" align="center" sideOffset={0} alignOffset={0}>
-          {/* <div onClick={() => setDialogType("folder")}> */}
-          <div onClick={()=>alert("Development in progress !")}>
+          <div onClick={() => setDialogType("folder")}>
+          {/* <div onClick={()=>alert("Development in progress !")}> */}
             <FolderPlus className='' size={17} color='grey' />
           </div>
         </Hint>
