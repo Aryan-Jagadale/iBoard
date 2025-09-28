@@ -23,7 +23,7 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover";
 
-const FileTreeNode = ({ node, level = 0, onDelete, onRename, onAddFile, onAddFolder,onClickFile,activeId }: { 
+const FileTreeNode = ({ node, level = 0, onDelete, onRename, onAddFile, onAddFolder, onClickFile, activeId, closeFoldersKey }: { 
   node: any; 
   level?: number; 
   onDelete: (nodeId: string,nodeName:string) => void; 
@@ -32,14 +32,24 @@ const FileTreeNode = ({ node, level = 0, onDelete, onRename, onAddFile, onAddFol
   onAddFolder: (nodeId: string, folderName: string) => void;
   onClickFile: (node: any) => void;
   activeId: string;
+  closeFoldersKey?: number;
 }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [isRenaming, setIsRenaming] = useState(false);
   const [newName, setNewName] = useState(node.name);
 
+  // Close all folders when closeFoldersKey changes
+  useEffect(() => {
+    if (closeFoldersKey !== undefined) {
+      setIsOpen(false);
+    }
+  }, [closeFoldersKey]);
+
   const toggleFolder = (e: React.MouseEvent) => {
     e.stopPropagation();
-    setIsOpen(!isOpen);
+    if (node.type === 'folder') {
+      setIsOpen(!isOpen);
+    }
   };
 
   const handleDelete = (e: React.MouseEvent) => {
@@ -72,9 +82,9 @@ const FileTreeNode = ({ node, level = 0, onDelete, onRename, onAddFile, onAddFol
   };
 
   const renderContent = () => (
-    <div className={`flex items-center space-x-2 h-7 hover:cursor-pointer leading-10 ${node.type === 'file' ? 'ml-6' : ''} `} onClick={() => node.type === 'file' ? onClickFile(node) : null}>
+    <div className={`flex items-center space-x-2 h-7 hover:cursor-pointer leading-10 ${node.type === 'file' ? 'ml-6' : ''} `} onClick={() => node.type === 'file' ? onClickFile(node) : toggleFolder}>
       {node.type === 'folder' && (
-        <span className="cursor-pointer">
+        <span className="cursor-pointer" onClick={toggleFolder}>
           {isOpen ? <ChevronDown size={16} /> : <ChevronRight size={16} />}
         </span>
       )}
@@ -124,6 +134,7 @@ const FileTreeNode = ({ node, level = 0, onDelete, onRename, onAddFile, onAddFol
                     onAddFolder={onAddFolder}
                     onClickFile={onClickFile}
                     activeId={activeId}
+                    closeFoldersKey={closeFoldersKey}
                   />
                 ))}
             </div>
@@ -162,6 +173,7 @@ const FileExplorer = ({prompt,setPrompt,sendDatatoBackednLLM,serverFileType, new
   const [newItemName, setNewItemName] = useState("");
   const [dialogType, setDialogType] = useState<"file" | "folder" | null>(null);
   const [fileExtension, setFileExtension] = useState<string>(".txt");
+  const [closeFoldersKey, setCloseFoldersKey] = useState(0);
 
   const extensions = fileExtensions[serverFileType];
 
@@ -308,7 +320,7 @@ const FileExplorer = ({prompt,setPrompt,sendDatatoBackednLLM,serverFileType, new
           </div>
         </Hint>
         <Hint label={'Close all folders'} side="top" align="center" sideOffset={0} alignOffset={0}>
-          <div onClick={()=>alert("Development in progress !")}>
+          <div onClick={() => setCloseFoldersKey(prev => prev + 1)}>
             <CopyMinus size={16} color='grey' />
           </div>
         </Hint>
@@ -330,6 +342,7 @@ const FileExplorer = ({prompt,setPrompt,sendDatatoBackednLLM,serverFileType, new
               onAddFolder={handleAddFolder}
               onClickFile={handleClickFile}
               activeId={activeId}
+              closeFoldersKey={closeFoldersKey}
             />
           ))}
       </div>
