@@ -2,57 +2,73 @@ import pako from 'pako';
 
 const editingScript = `
 <script>
-  // ---------- Robust text wrapping with MutationObserver ----------
-  function makeTextEditable() {
-    const root = document.getElementById('root');
-    if (!root) return;
-    console.log("makeTextEditable called");
+  // ========== ROBUST TEXT EDITOR BRIDGE ==========
+  const root = document.getElementById('root');
+  if (!root) {
+    console.error('No #root found');
+    return;
+  }
 
-    let idCounter = 0;
-    const editableClass = 'editable-text';
+  let editableIdCounter = 0;
+  const CLASS = 'editable-text';
 
-    // Wrap existing text nodes
-    const wrapTextNodes = (container) => {
-      const walker = document.createTreeWalker(container, NodeFilter.SHOW_TEXT, null);
-      const nodes = [];
-      while (walker.nextNode()) nodes.push(walker.currentNode);
+  // Wrap all text nodes in a container
+  const wrapText = (container) => {
+    const walker = document.createTreeWalker(container, NodeFilter.SHOW_TEXT);
+    const nodes = [];
+    while (walker.nextNode()) nodes.push(walker.currentNode);
 
-      nodes.forEach(textNode => {
-        if (!textNode.nodeValue?.trim()) return;
-        if (textNode.parentNode?.closest(\`.\${editableClass}\`) || textNode.parentNode?.closest('[contenteditable]')) return;
+    nodes.forEach(textNode => {
+      if (!textNode.nodeValue?.trim()) return;
+      if (textNode.parentNode?.closest('.' + CLASS)) return;
 
-        const span = document.createElement('span');
-        span.className = editableClass;
-        span.dataset.id = \`editable_\${idCounter++}\`;
-        span.textContent = textNode.nodeValue;
-        textNode.parentNode.replaceChild(span, textNode);
-      });
-    };
+      const span = document.createElement('span');
+      span.className = CLASS;
+      span.dataset.id = 'editable_' + (editableIdCounter++);
+      span.textContent = textNode.nodeValue;
+      textNode.parentNode.replaceChild(span, textNode);
+    });
+  };
 
-    // Initial wrap
-    wrapTextNodes(root);
+  // Initial wrap + observer
+  const startEditing = () => {
+    wrapText(root);
 
-    // Observe future changes (React updates, dynamic content, etc.)
     const observer = new MutationObserver(mutations => {
-      mutations.forEach(mutation => {
-        mutation.addedNodes.forEach(node => {
-          if (node.nodeType === Node.TEXT_NODE) {
-            if (node.parentNode && !node.parentNode.closest(\`.\${editableClass}\`)) {
-              wrapTextNodes(node.parentNode);
-            }
+      mutations.forEach(m => {
+        m.addedNodes.forEach(node => {
+          if (node.nodeType === Node.TEXT_NODE && node.parentNode) {
+            wrapText(node.parentNode);
           } else if (node.nodeType === Node.ELEMENT_NODE) {
-            wrapTextNodes(node);
+            wrapText(node);
           }
         });
       });
     });
 
     observer.observe(root, { childList: true, subtree: true });
+  };
+
+  // ========== WAIT FOR REACT TO MOUNT ==========
+  // React inserts first child into #root → start
+  const checkForContent = () => {
+    if (root.children.length > 0 || root.textContent?.trim()) {
+      requestAnimationFrame(startEditing);
+    } else {
+      requestAnimationFrame(checkForContent);
+    }
+  };
+
+  // Start checking
+  if (root.children.length > 0) {
+    startEditing();
+  } else {
+    checkForContent();
   }
 
-  // ---------- Double-click handler ----------
+  // ========== DOUBLE-CLICK ==========
   document.addEventListener('dblclick', e => {
-    const span = e.target.closest('.editable-text');
+    const span = e.target.closest('.' + CLASS);
     if (!span) return;
 
     window.parent.postMessage({
@@ -62,58 +78,15 @@ const editingScript = `
     }, '*');
   });
 
-  // ---------- Receive update ----------
+  // ========== UPDATE FROM PARENT ==========
   window.addEventListener('message', ev => {
     if (ev.source !== window.parent) return;
     const { type, id, html } = ev.data || {};
     if (type !== 'UPDATE_TEXT') return;
 
-    const span = document.querySelector(\`[data-id="\${id}"]\`);
-    if (span) {
-      span.innerHTML = html;
-    }
+    const span = document.querySelector('[data-id="' + id + '"]');
+    if (span) span.innerHTML = html;
   });
-
-  // ---------- Wait for React to mount ----------
-  const startObserverWhenReady = () => {
-    // React 18: createRoot
-    if (window.ReactDOMClient?.createRoot) {
-      const orig = window.ReactDOMClient.createRoot;
-      window.ReactDOMClient.createRoot = (...args) => {
-        const root = orig(...args);
-        // React flushes DOM after render
-        requestAnimationFrame(() => makeTextEditable());
-        return root;
-      };
-    } 
-    // React 17: render
-    else if (window.ReactDOM?.render) {
-      const orig = window.ReactDOM.render;
-      window.ReactDOM.render = (...args) => {
-        const result = orig(...args);
-        requestAnimationFrame(() => makeTextEditable());
-        return result;
-      };
-    } 
-    // Fallback: poll for #root content
-    else {
-      const check = () => {
-        if (document.getElementById('root')?.hasChildNodes()) {
-          makeTextEditable();
-        } else {
-          setTimeout(check, 100);
-        }
-      };
-      check();
-    }
-  };
-
-  // Start when DOM is ready
-  if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', startObserverWhenReady);
-  } else {
-    startObserverWhenReady();
-  }
 </script>
 `;
 

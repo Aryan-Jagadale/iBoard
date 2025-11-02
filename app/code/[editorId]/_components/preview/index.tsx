@@ -63,6 +63,11 @@ const PreviewScreen = () => {
     };
 
     const closeSidebar = () => {
+        // Send close message to iframe
+        iframeRef.current?.contentWindow?.postMessage(
+            { type: 'CLOSE_EDITOR' },
+            '*'
+        );
         setIsSidebarOpen(false);
         setEditingId(null);
     };
@@ -128,9 +133,19 @@ const PreviewScreen = () => {
                         }}
                     />
                 ) : (
-                    <p className="p-4 text-gray-500">
-                        Double-click any text in the preview to edit.
-                    </p>
+                    <div className="p-4">
+                        <h3 className="text-lg font-semibold mb-3 text-gray-700">Preview Editor</h3>
+                        <div className="space-y-2 text-sm text-gray-600">
+                            <p>• <strong>Double-click</strong> any text to edit</p>
+                            <p>• <strong>Single-click</strong> to see editable areas</p>
+                            <p>• Changes are updated in real-time</p>
+                        </div>
+                        <div className="mt-4 p-3 bg-blue-50 rounded-lg border-l-4 border-blue-400">
+                            <p className="text-sm text-blue-700">
+                                💡 Tip: Hover over text elements to see which ones are editable
+                            </p>
+                        </div>
+                    </div>
                 )}
             </CustomSidebar>
         </div>
