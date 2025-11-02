@@ -1,95 +1,121 @@
 import pako from 'pako';
 
 const editingScript = `
-      <script>
-        let editingEnabled = false;
-        let selectedEl = null;
+<script>
+  // ---------- Robust text wrapping with MutationObserver ----------
+  function makeTextEditable() {
+    const root = document.getElementById('root');
+    if (!root) return;
+    console.log("makeTextEditable called");
 
-        // Receive messages from parent
-        window.addEventListener('message', (e) => {
-          if (e.data.type === 'TOGGLE_EDIT_MODE') {
-            editingEnabled = e.data.enabled;
-            if (!editingEnabled && selectedEl) {
-              clearSelection();
+    let idCounter = 0;
+    const editableClass = 'editable-text';
+
+    // Wrap existing text nodes
+    const wrapTextNodes = (container) => {
+      const walker = document.createTreeWalker(container, NodeFilter.SHOW_TEXT, null);
+      const nodes = [];
+      while (walker.nextNode()) nodes.push(walker.currentNode);
+
+      nodes.forEach(textNode => {
+        if (!textNode.nodeValue?.trim()) return;
+        if (textNode.parentNode?.closest(\`.\${editableClass}\`) || textNode.parentNode?.closest('[contenteditable]')) return;
+
+        const span = document.createElement('span');
+        span.className = editableClass;
+        span.dataset.id = \`editable_\${idCounter++}\`;
+        span.textContent = textNode.nodeValue;
+        textNode.parentNode.replaceChild(span, textNode);
+      });
+    };
+
+    // Initial wrap
+    wrapTextNodes(root);
+
+    // Observe future changes (React updates, dynamic content, etc.)
+    const observer = new MutationObserver(mutations => {
+      mutations.forEach(mutation => {
+        mutation.addedNodes.forEach(node => {
+          if (node.nodeType === Node.TEXT_NODE) {
+            if (node.parentNode && !node.parentNode.closest(\`.\${editableClass}\`)) {
+              wrapTextNodes(node.parentNode);
             }
-          } else if (e.data.type === 'APPLY_CHANGES') {
-            if (selectedEl && e.data.changes) {
-              // Apply content
-              if (e.data.changes.content !== undefined) {
-                selectedEl.innerHTML = e.data.changes.content;
-              }
-              // Apply styles
-              Object.entries(e.data.changes.styles).forEach(([prop, val]) => {
-                if (val && val !== 'normal' && val !== 'none') {
-                  selectedEl.style[prop] = val;
-                }
-              });
-              clearSelection();
-              window.parent.postMessage({ type: 'STYLES_APPLIED' }, '*');
-            }
+          } else if (node.nodeType === Node.ELEMENT_NODE) {
+            wrapTextNodes(node);
           }
         });
+      });
+    });
 
-        function highlightElement(el) {
-          el.style.outline = '2px dashed #0070f3';
-          el.style.outlineOffset = '2px';
-          el.style.backgroundColor = 'rgba(0, 112, 243, 0.05)';
-          el.style.transition = 'all 0.2s ease';
+    observer.observe(root, { childList: true, subtree: true });
+  }
+
+  // ---------- Double-click handler ----------
+  document.addEventListener('dblclick', e => {
+    const span = e.target.closest('.editable-text');
+    if (!span) return;
+
+    window.parent.postMessage({
+      type: 'OPEN_EDITOR',
+      id: span.dataset.id,
+      html: span.innerHTML
+    }, '*');
+  });
+
+  // ---------- Receive update ----------
+  window.addEventListener('message', ev => {
+    if (ev.source !== window.parent) return;
+    const { type, id, html } = ev.data || {};
+    if (type !== 'UPDATE_TEXT') return;
+
+    const span = document.querySelector(\`[data-id="\${id}"]\`);
+    if (span) {
+      span.innerHTML = html;
+    }
+  });
+
+  // ---------- Wait for React to mount ----------
+  const startObserverWhenReady = () => {
+    // React 18: createRoot
+    if (window.ReactDOMClient?.createRoot) {
+      const orig = window.ReactDOMClient.createRoot;
+      window.ReactDOMClient.createRoot = (...args) => {
+        const root = orig(...args);
+        // React flushes DOM after render
+        requestAnimationFrame(() => makeTextEditable());
+        return root;
+      };
+    } 
+    // React 17: render
+    else if (window.ReactDOM?.render) {
+      const orig = window.ReactDOM.render;
+      window.ReactDOM.render = (...args) => {
+        const result = orig(...args);
+        requestAnimationFrame(() => makeTextEditable());
+        return result;
+      };
+    } 
+    // Fallback: poll for #root content
+    else {
+      const check = () => {
+        if (document.getElementById('root')?.hasChildNodes()) {
+          makeTextEditable();
+        } else {
+          setTimeout(check, 100);
         }
+      };
+      check();
+    }
+  };
 
-        function clearSelection() {
-          if (selectedEl) {
-            selectedEl.style.outline = '';
-            selectedEl.style.outlineOffset = '';
-            selectedEl.style.backgroundColor = '';
-          }
-          selectedEl = null;
-        }
-
-        document.addEventListener('dblclick', (e) => {
-          if (!editingEnabled) return;
-
-          const el = e.target.closest('p, h1, h2, h3, h4, h5, h6, span, div, li');
-          if (!el || !el.textContent?.trim()) return;
-
-          clearSelection();
-          selectedEl = el;
-          highlightElement(selectedEl);
-
-          const computed = getComputedStyle(selectedEl);
-          const elData = {
-            outerHTML: selectedEl.outerHTML,
-            computedStyles: {
-              content: selectedEl.innerHTML,
-              fontWeight: computed.fontWeight,
-              fontStyle: computed.fontStyle,
-              textDecoration: computed.textDecorationLine || computed.textDecoration,
-              color: computed.color,
-              backgroundColor: computed.backgroundColor
-            }
-          };
-          window.parent.postMessage({ type: 'ELEMENT_SELECTED', elData }, '*');
-        }, true);
-
-        document.addEventListener('mouseover', (e) => {
-          if (!editingEnabled) return;
-          const el = e.target.closest('p, h1, h2, h3, h4, h5, h6, span, div, li');
-          if (el && el.textContent?.trim() && el !== selectedEl) {
-            el.style.cursor = 'pointer';
-            el.style.outline = '1px dotted #0070f3';
-          }
-        });
-
-        document.addEventListener('mouseout', (e) => {
-          if (!editingEnabled || selectedEl) return;
-          const el = e.target.closest('p, h1, h2, h3, h4, h5, h6, span, div, li');
-          if (el && el.textContent?.trim()) {
-            el.style.cursor = '';
-            el.style.outline = '';
-          }
-        });
-      </script>
-    `;
+  // Start when DOM is ready
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', startObserverWhenReady);
+  } else {
+    startObserverWhenReady();
+  }
+</script>
+`;
 
 export const reactAppHTML = (data:any) =>{
     let bundle: string;
@@ -111,8 +137,8 @@ export const reactAppHTML = (data:any) =>{
                     <div id="root"></div>
                     <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
                     <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
-                    <script type="module">${bundle}</script>
                     ${editingScript}
+                    <script type="module">${bundle}</script>
                 </body>
                 </html>`;
     return reactAppHTML;
